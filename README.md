@@ -1,4 +1,4 @@
-#Este es el repositorio del trabajo de Sistmas distribuidos y Paralelos
+# Este es el repositorio del trabajo de Sistmas distribuidos y Paralelos
 To Do's
 [] Better Readme
 [] Parte secuencial vector

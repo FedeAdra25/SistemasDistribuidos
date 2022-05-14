@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
 
 	DATA_T *A = (DATA_T*) malloc(sizeof(DATA_T)*N*N);
 	DATA_T *B = (DATA_T*) malloc(sizeof(DATA_T)*N*N);
-	DATA_T   *swapAux;
+	DATA_T *swapAux;
 
 	//Inicialización
 	int i,j,f;
@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
         */
         for(j=1;j<N-1;j++){
             B[j]=0;
-            for(col= j-1; col < j+3; j++){
+            for(col= j-1; col < j+3; col++){
                 B[j] += A[col]+A[N+col];
             }
             B[j]/= 6;
@@ -85,8 +85,8 @@ int main(int argc, char** argv) {
             B[i*N]=(A[(i-1)*N]+A[(i-1)*N+1]+A[i*N]+A[i*N+1]+A[(i+1)*N]+A[(i+1)*N+1])/6;
             for(j=1;j<N-1;j++){
                 B[i*N+j]=0;
-                for(fila= i-1; fila < i+3; i++){
-                    for(col= j-1; col < j+3; j++){
+                for(fila= i-1; fila < i+3; fila++){
+                    for(col= j-1; col < j+3; col++){
                         B[i*N+j] += A[fila*N+col];
                     }
                 }
@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
         //Cálculo inferior
         for(j=1;j<N-1;j++){
             B[(N-1)*N+j]=0;
-            for(col= j-1; col < j+3; j++){
+            for(col= j-1; col < j+3; col++){
                 B[(N-1)*N+j] += A[(N-2)*N+col]+A[(N-1)*N*col];
             }
             B[(N-1)*N+j] /= 6;

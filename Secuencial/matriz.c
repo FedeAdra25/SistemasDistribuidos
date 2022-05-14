@@ -1,44 +1,42 @@
 #include <stdio.h> 
 #include <stdlib.h> 
 #include <math.h>
+#include <sys/time.h>
+
+#define DATA_T double
+#define precision 0.01
 
 //Para calcular tiempo
-double dwalltime(){
-        double sec;
-        struct timeval tv;
-
-        gettimeofday(&tv,NULL);
-        sec = tv.tv_sec + tv.tv_usec/1000000.0;
-        return sec;
-}
-//para crear valores float
-double randFP(double min, double max) {
-  double range = (max - min);
-  double div = RAND_MAX / range;
-  return min + (rand() / div);
-}
+double dwalltime();
+//para crear valores DATA_T
+DATA_T randFP(DATA_T min, DATA_T max);
 
 int main(int argc, char** argv) {
 	int N = atoi(argv[1]);
 	double timetick;
 
-	float *A = (float*) malloc(sizeof(float)*N*N);
-	float *B = (float*) malloc(sizeof(float)*N*N);
-	float *swapAux;
+	DATA_T *A = (DATA_T*) malloc(sizeof(DATA_T)*N*N);
+	DATA_T *B = (DATA_T*) malloc(sizeof(DATA_T)*N*N);
+	DATA_T   *swapAux;
 
-	//inicializacion
-	int i,j;
+	//Inicialización
+	int i,j,f;
 	for(i=0;i<N;i++) {
+        f=i*N;
         for(j=0;j<N;j++){
-            A[i*N+j] = randFP(0.0,1.0);
+            A[f+j] = randFP(0.0,1.0);
+            #ifdef DEBUG
             printf("%.2f ",A[i]);
+            #endif
         }
+        #ifdef DEBUG
         printf("\n");
+        #endif
 	}
 	
 
 
-	//calculo del promedio
+	//Cálculo del promedio
 	int condRecalculo = 1,numIteracion= 0,fila,col;
 	timetick = dwalltime();
 	while (condRecalculo){
@@ -47,12 +45,12 @@ int main(int argc, char** argv) {
 
 
         //borde izquierdo superior
-        B[0] = (A[0] + A[1] + A[N] + A[N+1])/4
+        B[0] = (A[0] + A[1] + A[N] + A[N+1])/4;
         //-------------------------------------
 
-        //calculo superior
+        //Cálculo superior
         /*
-            Intento aporbechar la localidad, entonces primero sumo los 3 datos
+            Intento aprovechar la localidad, entonces primero sumo los 3 datos
             de la primera fila para todos los resultados, y despues hago lo mismo 
             para la segunda fila.
 
@@ -69,16 +67,16 @@ int main(int argc, char** argv) {
             for(col= j-1; col < j+3; j++){
                 B[j] += A[N+col];
             }
-            B[j] /= 9;
+            B[j] /= 6;
         }
         //----------------------------------------
 
         //borde derecho superior
-        B[N-1] = (A[N-1] + A[N-2] + A[N+(N-1)] +  A[N+(N-2)])/4
+        B[N-1] = (A[N-1] + A[N-2] + A[N+(N-1)] +  A[N+(N-2)])/4;
         //-------------------------------------
 
-        //calculo sin vertices
-        //este lo hice sin la idea de localidad anterior
+        //Cálculo sin vertices
+        //Este lo hice sin la idea de localidad anterior
         for(i=1;i<N-1;i++) {
             for(j=1;j<N-1;j++){
                 B[i*N+j]=0;
@@ -93,11 +91,11 @@ int main(int argc, char** argv) {
         }
         //----------------------------------------
 
-		//borde izquierdo inferior
-        B[(N-1)*N] = (A[(N-1)*N] + A[(N-1)*N+1] + A[(N-2)*N] +  A[(N-2)*N+1])/4
+		//Borde izquierdo inferior
+        B[(N-1)*N] = (A[(N-1)*N] + A[(N-1)*N+1] + A[(N-2)*N] +  A[(N-2)*N+1])/4;
         //-------------------------------------
         
-        //calculo inferior
+        //Cálculo inferior
         for(j=1;j<N-1;j++){
             B[(N-1)*N+j]=0;
             for(col= j-1; col < j+3; j++){
@@ -112,11 +110,11 @@ int main(int argc, char** argv) {
         }
         //----------------------------------------
 
-		//borde drecho inferior
-        B[(N-1)*N+ N-1] = (A[(N-1)*N +N-2] + A[(N-1)*N +N-1] + A[(N-2)*N +N-2] +  A[(N-2)*N +N-1])/4
+		//Borde drecho inferior
+        B[(N-1)*N+ N-1] = (A[(N-1)*N +N-2] + A[(N-1)*N +N-1] + A[(N-2)*N +N-2] +  A[(N-2)*N +N-1])/4;
         //-------------------------------------
 
-        //verificaion de convergencia
+        //Verificaion de convergencia
 		for (i= 1;i< N;i++){
 			if (fabs( B[0] - B[i] ) > 0.01 ){
 				condRecalculo = 1;
@@ -132,3 +130,19 @@ int main(int argc, char** argv) {
 	return(0);	
   }
 
+
+
+double dwalltime(){
+        double sec;
+        struct timeval tv;
+
+        gettimeofday(&tv,NULL);
+        sec = tv.tv_sec + tv.tv_usec/1000000.0;
+        return sec;
+}
+
+DATA_T randFP(DATA_T min, DATA_T max) {
+  DATA_T range = (max - min);
+  DATA_T div = RAND_MAX / range;
+  return min + (rand() / div);
+}

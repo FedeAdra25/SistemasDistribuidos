@@ -34,15 +34,16 @@ int main(int argc, char** argv) {
         for(j=0;j<N;j++){
             A[f+j] = randFP(0.0,1.0);
             #ifdef DEBUG
-            printf("%.2f ",A[i]);
+            printf("%.2f ",A[f+j]);
             #endif
         }
         #ifdef DEBUG
         printf("\n");
         #endif
 	}
-	
-
+	#ifdef DEBUG
+    printf("Llegue a aca");
+    #endif
 	//Cálculo del promedio
 	int condRecalculo = 1,numIteracion= 0,fila,col;
 	timetick = dwalltime();
@@ -67,27 +68,23 @@ int main(int argc, char** argv) {
         for(j=1;j<N-1;j++){
             B[j]=0;
             for(col= j-1; col < j+3; j++){
-                B[j] += A[col];
+                B[j] += A[col]+A[N+col];
             }
-        }
-        for(j=1;j<N-1;j++){
-            for(col= j-1; col < j+3; j++){
-                B[j] += A[N+col];
-            }
-            B[j] /= 6;
+            B[j]/= 6;
         }
         //----------------------------------------
 
-        //borde derecho superior
+        //Borde derecho superior
         B[N-1] = (A[N-1] + A[N-2] + A[N+(N-1)] +  A[N+(N-2)])/4;
         //-------------------------------------
 
         //Cálculo sin vertices
         //Este lo hice sin la idea de localidad anterior
         for(i=1;i<N-1;i++) {
+            //Calculo primer elemento de la fila (calculo de todas las primeras columnas)
+            B[i*N]=(A[(i-1)*N]+A[(i-1)*N+1]+A[i*N]+A[i*N+1]+A[(i+1)*N]+A[(i+1)*N+1])/6;
             for(j=1;j<N-1;j++){
                 B[i*N+j]=0;
-
                 for(fila= i-1; fila < i+3; i++){
                     for(col= j-1; col < j+3; j++){
                         B[i*N+j] += A[fila*N+col];
@@ -95,45 +92,50 @@ int main(int argc, char** argv) {
                 }
                 B[i*N+j] /= 9;
             }
+            //Calculo último elemento de la fila (calculo de todas las últimas columnas)
+            //j=N-1
+            B[i*N+j]=(A[(i-1)*N-1+j]+A[(i-1)*N+j]+A[i*N-1+j]+A[i*N+j]+A[(i+1)*N-1+j]+A[(i+1)*N+j])/6;
         }
         //----------------------------------------
 
 		//Borde izquierdo inferior
-        B[(N-1)*N] = (A[(N-1)*N] + A[(N-1)*N+1] + A[(N-2)*N] +  A[(N-2)*N+1])/4;
+        B[(N-1)*N] = (A[(N-2)*N] +  A[(N-2)*N+1] + A[(N-1)*N] + A[(N-1)*N+1])/4;
         //-------------------------------------
         
         //Cálculo inferior
         for(j=1;j<N-1;j++){
             B[(N-1)*N+j]=0;
             for(col= j-1; col < j+3; j++){
-                B[(N-1)*N+j] += A[(N-2)*N+col];
+                B[(N-1)*N+j] += A[(N-2)*N+col]+A[(N-1)*N*col];
             }
-        }
-        for(j=1;j<N-1;j++){
-            for(col= j-1; col < j+3; j++){
-                B[(N-1)*N+j] += A[(N-1)*N*col];
-            }
-            B[(N-1)*N+j] /= 9;
+            B[(N-1)*N+j] /= 6;
         }
         //----------------------------------------
 
-		//Borde drecho inferior
-        B[(N-1)*N+ N-1] = (A[(N-1)*N +N-2] + A[(N-1)*N +N-1] + A[(N-2)*N +N-2] +  A[(N-2)*N +N-1])/4;
+		//Borde derecho inferior, j=N-1
+        B[N*N-1] = (A[N*N-2] + A[N*N-1] + A[N*j-2] +  A[N*j-1])/4;
         //-------------------------------------
-
+        
         //Verificaion de convergencia
-		for (i= 1;i< N;i++){
-			if (fabs( B[0] - B[i] ) > 0.01 ){
-				condRecalculo = 1;
-				swapAux = A;
-				A = B;
-				B = swapAux;
-				break;
-			}
+		for (i= 0;i< N;i++){
+            for(j=1;j<N;j++){
+                if (fabs( B[0] - B[i*N+j] ) > 0.01 ){
+                    condRecalculo = 1;
+                    #ifdef DEBUG
+                    printf("B[0]-B[%d] = %.15f - B[0]=%.15f y B[%d]=%.15f\n",i,fabs(B[0]-B[i]),B[0],i,B[i]);
+                    #endif
+                    swapAux = A;
+                    A = B;
+                    B = swapAux;
+                    break;
+                }
+            }
 		}
 	}
 	printf("Tiempo en segundos %f, con %d iteraciones \n", dwalltime() - timetick,numIteracion);
 
+    free(A);
+    free(B);
 	return(0);	
   }
 

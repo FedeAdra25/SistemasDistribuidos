@@ -44,11 +44,11 @@ int main(int argc, char** argv) {
 	timetick = dwalltime();
 	while (!converge){
 		numIteracion++;
-		B[0] = (A[0]+A[1])/2;
-		B[N-1] = (A[N-2]+A[N-1])/2;
+		B[0] = (A[0]+A[1]) * 0.5;
+		B[N-1] = (A[N-2]+A[N-1]) *0.5;
 
 		for (i=1;i<N-1;i++){
-			B[i] = (A[i-1] + A[i] + A[i+1])/3.0f; 
+			B[i] = (A[i-1] + A[i] + A[i+1])* (0.33333333); 
 		}
 
 		#ifdef DEBUG
@@ -59,12 +59,13 @@ int main(int argc, char** argv) {
 		}
 		printf("\n");
 		#endif
-	
+		converge = 1;
 		for (i=1;i<N;i++){
 			if (fabs(B[0]-B[i])>precision){
-				#ifdef DEBUG
+				#ifdef DEBUG2
 				printf("B[0]-B[%d] = %.15f - B[0]=%.15f y B[%d]=%.15f\n",i,fabs(B[0]-B[i]),B[0],i,B[i]);
 				#endif
+				converge = 0;
 				swapAux = A;
 				A = B;
 				B = swapAux;

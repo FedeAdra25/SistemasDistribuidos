@@ -3,7 +3,7 @@
 #include <math.h>
 #include <sys/time.h>
 
-#define DATA_T double
+#define DATA_T float
 #define precision 0.01
 
 //Para calcular tiempo
@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
 
 
         //Borde izquierdo superior
-        B[0] = (A[0] + A[1] + A[N] + A[N+1])/4;
+        B[0] = (A[0] + A[1] + A[N] + A[N+1]) * 0.25;
         //-------------------------------------
 
         //Cálculo superior
@@ -70,12 +70,12 @@ int main(int argc, char** argv) {
             for(col= j-1; col < j+3; col++){
                 B[j] += A[col]+A[N+col];
             }
-            B[j]/= 6;
+            B[j]*= 0.16666666666;
         }
         //----------------------------------------
 
         //Borde derecho superior
-        B[N-1] = (A[N-1] + A[N-2] + A[N+(N-1)] +  A[N+(N-2)])/4;
+        B[N-1] = (A[N-1] + A[N-2] + A[N+(N-1)] +  A[N+(N-2)]) * 0.25;
         //-------------------------------------
 
         //Cálculo sin vertices
@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
                         B[i*N+j] += A[fila*N+col];
                     }
                 }
-                B[i*N+j] /= 9;
+                B[i*N+j] *= 0.11111111;
             }
             //Calculo último elemento de la fila (calculo de todas las últimas columnas)
             //j=N-1
@@ -99,7 +99,7 @@ int main(int argc, char** argv) {
         //----------------------------------------
 
 		//Borde izquierdo inferior
-        B[(N-1)*N] = (A[(N-2)*N] +  A[(N-2)*N+1] + A[(N-1)*N] + A[(N-1)*N+1])/4;
+        B[(N-1)*N] = (A[(N-2)*N] +  A[(N-2)*N+1] + A[(N-1)*N] + A[(N-1)*N+1]) * 0.25;
         //-------------------------------------
         
         //Cálculo inferior
@@ -108,21 +108,33 @@ int main(int argc, char** argv) {
             for(col= j-1; col < j+3; col++){
                 B[(N-1)*N+j] += A[(N-2)*N+col]+A[(N-1)*N*col];
             }
-            B[(N-1)*N+j] /= 6;
+            B[(N-1)*N+j] *= 0.16666666666;
         }
         //----------------------------------------
 
 		//Borde derecho inferior, j=N-1
-        B[N*N-1] = (A[N*N-2] + A[N*N-1] + A[N*j-2] +  A[N*j-1])/4;
+        B[N*N-1] = (A[N*N-2] + A[N*N-1] + A[N*j-2] +  A[N*j-1]) * 0.25;
         //-------------------------------------
         
+        #ifdef DEBUG
+            for(i=0;i<N;i++) {
+                f=i*N;
+                for(j=0;j<N;j++){
+                    printf("%.2f ",A[f+j]);
+                }
+            printf("\n");
+	        }
+        #endif
+
+
         //Verificaion de convergencia
 		for (i= 0;i< N;i++){
             for(j=1;j<N;j++){
                 if (fabs( B[0] - B[i*N+j] ) > 0.01 ){
                     condRecalculo = 1;
                     #ifdef DEBUG
-                    printf("B[0]-B[%d] = %.15f - B[0]=%.15f y B[%d]=%.15f\n",i,fabs(B[0]-B[i]),B[0],i,B[i]);
+                    //printf("B[0]-B[%d] = %.15f - B[0]=%.15f y B[%d]=%.15f\n",i,fabs(B[0]-B[i]),B[0],i,B[i]);
+                    printf("Iteriacion: %d \n",numIteracion);
                     #endif
                     swapAux = A;
                     A = B;
@@ -136,7 +148,7 @@ int main(int argc, char** argv) {
 
     free(A);
     free(B);
-	return(0);	
+	return 0;	
   }
 
 

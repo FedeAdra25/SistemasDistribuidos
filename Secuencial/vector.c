@@ -3,7 +3,7 @@
 #include <math.h>
 #include <sys/time.h>
 
-#define DATA_T double
+#define DATA_T float
 #define precision 0.01
 
 

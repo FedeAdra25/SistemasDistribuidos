@@ -29,8 +29,7 @@ void *funcion(void *arg){
     printf("Hilo id: %d\n",tid);
 	#endif
     /**
-     * TODO: arreglar el problema del end
-	 		agrega barreras
+     * TODO: arreglar el debuf y poner los ifdef donde conrrespondan
      **/
     
 	int start, end,i;
@@ -40,29 +39,44 @@ void *funcion(void *arg){
 	while(!convergeG){
 		//compare = (A[0]+A[1]) * 0.5;
 		B[0] = (A[0]+A[1]) * 0.5;
-		//calculo mi parte del promedio
+
+		//calculo mi parte del promedio y a la vez reviso si converge
+		converge[tid] = 1;
 		for (i= start;i< end;i++){
 			B[i] = (A[i-1] + A[i] + A[i+1])* (0.33333333); 
-		}
-		if (tid == T-1){
-			B[N-1] = (A[N-2]+A[N-1]) *0.5;
-		}
-
-		converge[tid] = 1;
-		//revisa su parte del promedio
-		for (i=start;i<(end + (tid == T-1));i++){
 			if (fabs(B[0]-B[i])>precision){
-				// #ifdef DEBUG2
-				// printf("B[0]-B[%d] = %.15f - B[0]=%.15f y B[%d]=%.15f\n",i,fabs(B[0]-B[i]),B[0],i,B[i]);
-				// #endif
+				#ifdef DEBUG2
+				printf("Hilo %d ,B[0]-B[%d] = %.15f - B[0]=%.15f y B[%d]=%.15f\n",tid,i,fabs(B[0]-B[i]),B[0],i,B[i]);
+				#endif
 				converge[tid] = 0;
 				break;
+			}
+		}
+
+		//calculo el promedio de los numeros que me faltaron antes de descubrir la divergencia
+		for (;i< end;i++){
+			B[i] = (A[i-1] + A[i] + A[i+1])* (0.33333333);
+		}
+		
+		#ifdef DEBUG
+			printf("Hilo id: %d ralizo %d iteraciones en la %d iteracion\n",tid,i-start, numIteracion);
+		#endif
+
+		//reviso el ultimo valor
+		if (tid == T-1){
+			B[N-1] = (A[N-2]+A[N-1]) *0.5;
+			if (converge[tid] && fabs(B[0]-B[i])>precision){
+				#ifdef DEBUG
+				printf("Hilo %d ,B[0]-B[%d] = %.15f - B[0]=%.15f y B[%d]=%.15f\n",tid,i,fabs(B[0]-B[i]),B[0],i,B[i]);
+				#endif
+				converge[tid] = 0;
 			}
 		}
 
 		//barrera para todos los hilos
 		pthread_barrier_wait(&barrera);
 
+		//el hilo 0 revisa las convergencia de los demas y swapea los vectores 		
 		if ((tid == 0)){
 				convergeG = 1;
 				for(i= 0;i < T && convergeG;i++){
@@ -72,6 +86,15 @@ void *funcion(void *arg){
 				swapAux = A;
 				A = B;
 				B = swapAux;
+
+				#ifdef DEBUG
+				printf("vector: ");
+				for(i= 0;i<N;i++){
+					printf("%.10f-",A[i]);
+				}
+				printf("\n");
+				printf("-------------------------------------------------\n");
+				#endif
 		} 
 
 		//barrera para todos los hilos
@@ -83,12 +106,6 @@ void *funcion(void *arg){
 
 
 
-
-
-
-
-
-
 int main(int argc, char** argv) {
 	N = atoi(argv[1]); 
 	T = atoi(argv[2]); 
@@ -97,10 +114,6 @@ int main(int argc, char** argv) {
 	A = (DATA_T*) malloc(sizeof(DATA_T)*N);
 	B = (DATA_T*) malloc(sizeof(DATA_T)*N);
 	converge = (int*) malloc(sizeof(int)*T);
-
-	/**
-	 * TODO: validar input
-	 * */
 
 	//Inicialización
 	int i;
@@ -151,10 +164,10 @@ DATA_T randFP(DATA_T min, DATA_T max) {
 }
 
 double dwalltime(){
-        double sec;
-        struct timeval tv;
+	double sec;
+	struct timeval tv;
 
-        gettimeofday(&tv,NULL);
-        sec = tv.tv_sec + tv.tv_usec/1000000.0;
-        return sec;
+	gettimeofday(&tv,NULL);
+	sec = tv.tv_sec + tv.tv_usec/1000000.0;
+	return sec;
 }

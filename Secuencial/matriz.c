@@ -16,22 +16,26 @@ void printMatriz(int, DATA_T*);
 
 
 int main(int argc, char** argv) {
-	int N = atoi(argv[1]);
+	int N;
 	double timetick;
 
-
-    //TODO: Validar recibir N antes de castear a atoi
+    if(argc<1){
+        printf("Error: debe enviar el tamaño de la matriz. \nRecibido %d argumentos\n",argc);
+        printf("Forma: ./out.o N\n");
+        return 2;
+    }
+    N = atoi(argv[1]);
     if(N<8){
         printf("N debe ser mayor a 8 (N=%d)",N);
         return 0;
     }
 
-
+    //Alocación de memoria para matrices
 	DATA_T *A = (DATA_T*) malloc(sizeof(DATA_T)*N*N);
 	DATA_T *B = (DATA_T*) malloc(sizeof(DATA_T)*N*N);
 	DATA_T *swapAux;
 
-	//Inicialización
+	//Inicialización de matriz A
 	int i,j,f;
 	for(i=0;i<N;i++) {
         f=i*N;
@@ -47,66 +51,50 @@ int main(int argc, char** argv) {
 	}
 
 
-	//Cálculo del promedio
+
+    //variables para algoritmo
 	int converge = 0,numIteracion= 0,inj;
-	timetick = dwalltime();
-	
-    
+
+	//Algoritmo de filtrado
+	timetick = dwalltime();    
     while (!converge){
-	//while (numIteracion < 5){
     	numIteracion++;
 		converge = 1;
 
 
-        //Borde izquierdo superior
+        //Borde izquierdo superior B[0,0]
         B[0] = (A[0] + A[1] + A[N] + A[N+1]) * 0.25;
         //-------------------------------------
 
-        #ifdef DEBUG
-            printf("A[0]=%.2f ,B[0]=%.2f \n",A[0], B[0]);
-        #endif
-
-        //Cálculo superior revisando convergencia
+        //Cálculo fila 0 revisando convergencia: B[0,x]
         for(j=1;j<N-1;j++){
-            B[j]= (A[j] + A[j-1] + A [j+1] + A[N+j] + A[N+j-1] + A[N+j+1]) * (0.1666666666666);
-
-            //calculo de convergencia
+            B[j]= (A[j] + A[j-1] + A [j+1] + A[N+j] + A[N+j-1] + A[N+j+1]) * (1.0/6);
+            //Calculo de convergencia
             if (fabs(B[0]-B[j])>precision){
-				#ifdef DEBUG
-				printf("B[0]-B[%d] = %.15f - B[0]=%.15f y B[%d]=%.15f\n",i,fabs(B[0]-B[i]),B[0],i,B[i]);
-				#endif
 				converge = 0;
 				break;
 			}
         }
 
-        //calculo superior sin convergencia
+        //Calculo el resto de la fila 0
         for(;j<N-1;j++){
-            B[j]= (A[j] + A[j-1] + A [j+1] + A[N+j] + A[N+j-1] + A[N+j+1]) * (0.1666666666666);
+            B[j]= (A[j] + A[j-1] + A [j+1] + A[N+j] + A[N+j-1] + A[N+j+1]) * (1.0/6);
         }
-
-
-        //----------------------------------------
-
         #ifdef DEBUG
-            printf("hice la parte superior\n");
+            printf("Fila 0 (parte superior) calculada\n--------------\n");
         #endif
-
-
-        //Borde derecho superior
+        //----------------------------------------
+        //Esquina derecha superior B[0,N-1]
         B[N-1] = (A[N-1] + A[N-2] + A[N+(N-1)] +  A[N+(N-2)]) * 0.25;
-        //Revisa convergencia Borde derecho superior
+        //Reviso convergencia esquina derecha superior
         if (converge && fabs(B[0]-B[N-1])>precision){
-				#ifdef DEBUG
-				printf("B[0]-B[%d] = %.15f - B[0]=%.15f y B[%d]=%.15f\n",i,fabs(B[0]-B[i]),B[0],i,B[i]);
-				#endif
 				converge = 0;
 		}
-        //-------------------------------------
-
         #ifdef DEBUG
             printf("Hice el borde derecho superior\n");
         #endif
+        //-------------------------------------
+
 
         #ifdef DEBUG
         printf("MATRIZ ANTES:\n\n\n");

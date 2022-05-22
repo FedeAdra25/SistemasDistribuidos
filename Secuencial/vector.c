@@ -3,7 +3,7 @@
 #include <math.h>
 #include <sys/time.h>
 
-#define DATA_T float
+#define DATA_T double
 #define precision 0.01
 
 
@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
 	DATA_T *swapAux;
 
 	/**
-	 * TODO: validar input
+	 * TODO: revisar porque siempre devuelve las mismas iteraciones
 	 * */
 
 	//Inicialización
@@ -42,15 +42,43 @@ int main(int argc, char** argv) {
 	int converge=0,numIteracion= 0;
 
 	timetick = dwalltime();
-	while (!converge){
+	while (!converge ){
 		numIteracion++;
 		B[0] = (A[0]+A[1]) * 0.5;
-		B[N-1] = (A[N-2]+A[N-1]) *0.5;
 
+		converge = 1;
 		for (i=1;i<N-1;i++){
-			B[i] = (A[i-1] + A[i] + A[i+1])* (0.33333333); 
+			B[i] = (A[i-1] + A[i] + A[i+1])* (0.33333333);
+			if (fabs(B[0]-B[i])>precision){
+				#ifdef DEBUG
+				printf("B[0]-B[%d] = %.15f - B[0]=%.15f y B[%d]=%.15f\n",i,fabs(B[0]-B[i]),B[0],i,B[i]);
+				#endif
+				converge = 0;
+				break;
+			}
 		}
 
+		for (;i<N-1;i++){
+			B[i] = (A[i-1] + A[i] + A[i+1])* (0.33333333);
+		}
+
+		B[N-1] = (A[N-2]+A[N-1]) *0.5;
+		#ifdef DEBUG3
+		printf("B[%d]= %.15f, B[0] = %.15f \n",N-1,B[N-1], B[0]);
+		#endif
+
+		if (converge && fabs(B[0]-B[N-1])>precision){
+			#ifdef DEBUG
+			printf("B[0]-B[%d] = %.15f - B[0]=%.15f y B[%d]=%.15f\n",N-1,fabs(B[0]-B[N-1]),B[0],i,B[N-1]);
+			#endif
+			converge = 0;
+		}
+
+		if (!converge){
+				swapAux = A;
+				A = B;
+				B = swapAux;
+		}
 		#ifdef DEBUG
 		//Imprimo  calculo
 		printf("Iteracion no: %d: \n",numIteracion);
@@ -59,19 +87,7 @@ int main(int argc, char** argv) {
 		}
 		printf("\n");
 		#endif
-		converge = 1;
-		for (i=1;i<N;i++){
-			if (fabs(B[0]-B[i])>precision){
-				#ifdef DEBUG2
-				printf("B[0]-B[%d] = %.15f - B[0]=%.15f y B[%d]=%.15f\n",i,fabs(B[0]-B[i]),B[0],i,B[i]);
-				#endif
-				converge = 0;
-				swapAux = A;
-				A = B;
-				B = swapAux;
-				break;
-			}
-		}
+		
 	}
 	/**
 	 * TODO: Agregar tests

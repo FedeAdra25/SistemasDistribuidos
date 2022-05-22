@@ -82,10 +82,13 @@ void *funcion(void *arg){
 				for(i= 0;i < T && convergeG;i++){
 					convergeG = convergeG && converge[i];
 				}
+				if (!convergeG){
+					swapAux = A;
+					A = B;
+					B = swapAux;
+				}
 				numIteracion++;
-				swapAux = A;
-				A = B;
-				B = swapAux;
+				
 
 				#ifdef DEBUG
 				printf("vector: ");

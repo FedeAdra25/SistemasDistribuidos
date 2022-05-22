@@ -1,0 +1,18 @@
+Matriz size 512
+Tiempo en segundos 4.229684, con 1786 iteraciones 
+-------------------
+Matriz size 1024
+Tiempo en segundos 37.628431, con 3640 iteraciones 
+-------------------
+Matriz size 2048
+Tiempo en segundos 198.309316, con 4850 iteraciones 
+-------------------
+Vector size 512
+Tiempo en segundos 0.226714, con 120910 iteraciones 
+-------------------
+Vector size 1024
+Tiempo en segundos 1.298856, con 376282 iteraciones 
+-------------------
+Vector size 2048
+Tiempo en segundos 6.572537, con 920527 iteraciones 
+-------------------

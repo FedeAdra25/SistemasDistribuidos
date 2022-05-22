@@ -21,9 +21,19 @@ int main(int argc, char** argv) {
 	DATA_T *B = (DATA_T*) malloc(sizeof(DATA_T)*N);
 	DATA_T *swapAux;
 
-	/**
-	 * TODO: revisar porque siempre devuelve las mismas iteraciones
-	 * */
+	if(argc<1){
+        printf("Error: debe enviar el tamaño de la matriz. \nRecibido %d argumentos\n",argc);
+        printf("Forma: ./out.o N\n");
+        return 2;
+    }
+    N = atoi(argv[1]);
+    if(N<8){
+        printf("N debe ser mayor a 8 (N=%d)",N);
+        return 0;
+    }
+    if(argc>1){
+        printf("%s\n",argv[2]);
+    }
 
 	//Inicialización
 	int i;
@@ -97,6 +107,7 @@ int main(int argc, char** argv) {
 	 * */
 	
 	printf("Tiempo en segundos %f, con %d iteraciones \n", dwalltime() - timetick,numIteracion);
+	printf("-------------------\n");
 	free(A);
 	free(B);
 	return(0);	

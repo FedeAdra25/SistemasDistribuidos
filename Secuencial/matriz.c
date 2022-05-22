@@ -10,6 +10,10 @@
 double dwalltime();
 //para crear valores DATA_T
 DATA_T randFP(DATA_T min, DATA_T max);
+//para imprimir matriz
+void printMatriz(int, DATA_T*);
+
+
 
 int main(int argc, char** argv) {
 	int N = atoi(argv[1]);
@@ -41,9 +45,6 @@ int main(int argc, char** argv) {
         printf("\n");
         #endif
 	}
-	#ifdef DEBUG
-    printf("Llegue a aca\n");
-    #endif
 
 
 	//Cálculo del promedio
@@ -62,8 +63,7 @@ int main(int argc, char** argv) {
         //-------------------------------------
 
         #ifdef DEBUG
-            printf("A[0]=%.2f ,B[0]=%.2f \n",A[0], B[0]);   
-
+            printf("A[0]=%.2f ,B[0]=%.2f \n",A[0], B[0]);
         #endif
 
         //Cálculo superior revisando convergencia
@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
 
         //Borde derecho superior
         B[N-1] = (A[N-1] + A[N-2] + A[N+(N-1)] +  A[N+(N-2)]) * 0.25;
-        //revisa convergencia Borde derecho superior
+        //Revisa convergencia Borde derecho superior
         if (converge && fabs(B[0]-B[N-1])>precision){
 				#ifdef DEBUG
 				printf("B[0]-B[%d] = %.15f - B[0]=%.15f y B[%d]=%.15f\n",i,fabs(B[0]-B[i]),B[0],i,B[i]);
@@ -105,13 +105,22 @@ int main(int argc, char** argv) {
         //-------------------------------------
 
         #ifdef DEBUG
-            printf("hice el borde derecho superior\n");
+            printf("Hice el borde derecho superior\n");
         #endif
 
-        //Cálculo sin vertices checkeando convergencia 
-        for(i=1;i<N-1 && converge;i++) {
+        #ifdef DEBUG
+        printf("MATRIZ ANTES:\n\n\n");
+        printf("i=%d j=%d converge=%d\n",i,j,converge);
+        printMatriz(N,B);
+        printf("\n\nFINMATRIZ\n\n");
+        #endif
+        j=1; //Esto se hace porque j=15 y puedo no entrar al for de acá entonces el siguiente
+                //que retoma el valor de j se rompería
+        //Cálculo sin vertices checkeando convergencia
+        for(i=1,j=1;i<N-1 && converge;i++) {
             //Calculo primer elemento de la fila (calculo de todas las primeras columnas)
-            B[i*N]=(A[(i-1)*N]+A[(i-1)*N+1]+A[i*N]+A[i*N+1]+A[(i+1)*N]+A[(i+1)*N+1])/6;
+            B[i*N]=( A[(i-1)*N] + A[(i-1)*N+1] + A[i*N] 
+                    + A[i*N+1] + A[(i+1)*N] + A[(i+1)*N+1])/6;
             if (fabs(B[0]-B[i*N])>precision){
                 #ifdef DEBUG
                 printf("B[0]-B[%d] = %.15f - B[0]=%.15f y B[%d]=%.15f\n",i,fabs(B[0]-B[i]),B[0],i,B[i]);
@@ -134,7 +143,7 @@ int main(int argc, char** argv) {
             }
             //Calculo último elemento de la fila (calculo de todas las últimas columnas)
             //j=N-1
-            B[i*N+j]=(A[(i-1)*N-1+j]+A[(i-1)*N+j]+A[i*N-1+j]+A[i*N+j]+A[(i+1)*N-1+j]+A[(i+1)*N+j])/6;
+            B[i*N+j]=(A[(i-1)*N-1+j] + A[(i-1)*N+j] + A[i*N-1+j] + A[i*N+j] + A[(i+1)*N-1+j] + A[(i+1)*N+j])/6;
             if (fabs(B[0]-B[i*N+j])>precision){
                 #ifdef DEBUG
                 printf("B[0]-B[%d] = %.15f - B[0]=%.15f y B[%d]=%.15f\n",i,fabs(B[0]-B[i]),B[0],i,B[i]);
@@ -142,12 +151,18 @@ int main(int argc, char** argv) {
                 converge = 0;
 		    }
         }
+        #ifdef DEBUG
+        printf("MATRIZ:\n\n\n");
+        printf("i=%d j=%d converge=%d\n",i,j,converge);
+        printMatriz(N,B);
+        printf("\n\nFINMATRIZ\n\n");
+        #endif
 
 
         //Cálculo sin vertices(el resto en caso de no convergir) sin checkeo de convergencia 
-        for(;i<N-1 && converge;i++) {
+        for(;i<N-1;i++) {
             //Calculo primer elemento de la fila (calculo de todas las primeras columnas)
-            B[i*N]=(A[(i-1)*N]+A[(i-1)*N+1]+A[i*N]+A[i*N+1]+A[(i+1)*N]+A[(i+1)*N+1])/6;
+            B[i*N]=(A[(i-1)*N] + A[(i-1)*N+1] + A[i*N] + A[i*N+1] + A[(i+1)*N] + A[(i+1)*N+1])/6;
             for(;j<N-1;j++){
                 inj = i*N+j;
                 B[inj]= (A[inj-N-1] + A[inj-N] + A[inj-N+1] 
@@ -156,7 +171,8 @@ int main(int argc, char** argv) {
             }
             //Calculo último elemento de la fila (calculo de todas las últimas columnas)
             //j=N-1
-            B[i*N+j]=(A[(i-1)*N-1+j]+A[(i-1)*N+j]+A[i*N-1+j]+A[i*N+j]+A[(i+1)*N-1+j]+A[(i+1)*N+j])/6;
+            B[i*N+j]=(   A[(i-1)*N-1+j]+A[(i-1)*N+j]+A[i*N-1+j]
+                        +A[i*N+j]+A[(i+1)*N-1+j]+A[(i+1)*N+j])/6;
             
             j=1; //esto se hace porque el for de arriba no tiene inicializado j
         }
@@ -164,7 +180,7 @@ int main(int argc, char** argv) {
         //----------------------------------------
 
         #ifdef DEBUG
-            printf("hice la matriz sin vertices\n");
+            printf("Hice la matriz sin vertices\n");
         #endif
 
 		//Borde izquierdo inferior
@@ -187,8 +203,8 @@ int main(int argc, char** argv) {
         for(j=1;j<N-1;j++){
             inj= i*N+j;
 
-            B[inj] = A[inj-1] + A[inj] + A[inj+1] 
-                    +A[inj-1-N] + A[inj-N] + A[inj+1-N];
+            B[inj] = (A[inj-1] + A[inj] + A[inj+1] 
+                    +A[inj-1-N] + A[inj-N] + A[inj+1-N])*0.1666666666666;
             
             //calculo de convergencia
             if (fabs(B[0]-B[inj])>precision){
@@ -203,8 +219,8 @@ int main(int argc, char** argv) {
         for(;j<N-1;j++){
             inj= i*N+j;
 
-            B[inj] = A[inj-1] + A[inj] + A[inj+1] 
-                    +A[inj-1-N] + A[inj-N] + A[inj+1-N];
+            B[inj] = (A[inj-1] + A[inj] + A[inj+1] 
+                    +A[inj-1-N] + A[inj-N] + A[inj+1-N])*0.1666666666666;
         }
         //----------------------------------------
 
@@ -213,7 +229,7 @@ int main(int argc, char** argv) {
         #endif
 
 		//Borde derecho inferior, j=N-1
-        B[N*N-1] = (A[N*N-2] + A[N*N-1] + A[N*j-2] +  A[N*j-1]) * 0.25;
+        B[N*N-1] = (A[N*N-2] + A[N*N-1] + A[N*j-2] + A[N*j-1])*0.25;
 
         if (converge && fabs(B[0]-B[N*N-1])>precision){
             #ifdef DEBUG
@@ -222,7 +238,12 @@ int main(int argc, char** argv) {
             converge = 0;
         }
         //-------------------------------------
-        
+        if(!converge){
+            swapAux=A;
+            A=B;
+            B=swapAux;
+            
+        }
         #ifdef DEBUG
             //imprimir la matriz
             for(i=0;i<N;i++) {
@@ -259,4 +280,16 @@ DATA_T randFP(DATA_T min, DATA_T max) {
   DATA_T range = (max - min);
   DATA_T div = RAND_MAX / range;
   return min + (rand() / div);
+}
+
+void printMatriz(int N, DATA_T* B){
+    int i,j,f,c;
+    //imprimir la matriz
+    for(i=0;i<N;i++) {
+        f=i*N;
+        for(j=0;j<N;j++){
+            printf("%.2f ",B[f+j]);
+        }
+    printf("\n");
+    }
 }

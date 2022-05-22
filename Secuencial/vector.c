@@ -47,6 +47,8 @@ int main(int argc, char** argv) {
 		B[0] = (A[0]+A[1]) * 0.5;
 
 		converge = 1;
+
+		//Calcula el elemento i del resultado. Si le da que no converge actualiza la variable
 		for (i=1;i<N-1;i++){
 			B[i] = (A[i-1] + A[i] + A[i+1])* (0.33333333);
 			if (fabs(B[0]-B[i])>precision){
@@ -57,23 +59,24 @@ int main(int argc, char** argv) {
 				break;
 			}
 		}
-
+		
+		//Calcula el resto de los elementos en caso de haber entrado al break
 		for (;i<N-1;i++){
 			B[i] = (A[i-1] + A[i] + A[i+1])* (0.33333333);
 		}
-
 		B[N-1] = (A[N-2]+A[N-1]) *0.5;
 		#ifdef DEBUG3
 		printf("B[%d]= %.15f, B[0] = %.15f \n",N-1,B[N-1], B[0]);
 		#endif
 
+		//Calcula la última posición para ver si converge
 		if (converge && fabs(B[0]-B[N-1])>precision){
 			#ifdef DEBUG
 			printf("B[0]-B[%d] = %.15f - B[0]=%.15f y B[%d]=%.15f\n",N-1,fabs(B[0]-B[N-1]),B[0],i,B[N-1]);
 			#endif
 			converge = 0;
 		}
-
+		//Verifico si converge hago el swap
 		if (!converge){
 				swapAux = A;
 				A = B;

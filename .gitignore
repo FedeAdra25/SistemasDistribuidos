@@ -1,3 +1,6 @@
 #ignoro codigo c compilado
 *.o
+#ignoro proyecto de vscode
 .vscode/*
+#ignoro archivos de compilación
+**/compile.sh

@@ -12,54 +12,80 @@ double dwalltime();
 DATA_T randFP(DATA_T min, DATA_T max);
 //para imprimir matriz
 void printMatriz(int, DATA_T*);
+//tarea de los hilos
+void *funcion(void *arg)
 
+//variables compartidas
+int N,T, *converge, convergeG=0,numIteracion= 0;
+DATA_T *A,*B,*swapAux;
 
+pthread_barrier_t barrera;
 
 int main(int argc, char** argv) {
-	int N;
+	N = atoi(argv[1]); 
+	T = atoi(argv[2]); 
 	double timetick;
 
-    if(argc<1){
-        printf("Error: debe enviar el tamaño de la matriz. \nRecibido %d argumentos\n",argc);
-        printf("Forma: ./out.o N\n");
-        return 2;
-    }
-    N = atoi(argv[1]);
-    if(N<8){
-        printf("N debe ser mayor a 8 (N=%d)",N);
-        return 0;
-    }
+	A = (DATA_T*) malloc(sizeof(DATA_T)*N);
+	B = (DATA_T*) malloc(sizeof(DATA_T)*N);
+	converge = (int*) malloc(sizeof(int)*T);
 
-    //Alocación de memoria para matrices
-	DATA_T *A = (DATA_T*) malloc(sizeof(DATA_T)*N*N);
-	DATA_T *B = (DATA_T*) malloc(sizeof(DATA_T)*N*N);
-	DATA_T *swapAux;
-
-	//Inicialización de matriz A
-	int i,j,f;
+	//Inicialización
+	int i;
+	//inicializo vector
 	for(i=0;i<N;i++) {
-        f=i*N;
-        for(j=0;j<N;j++){
-            A[f+j] = randFP(0.0,1.0);
-            #ifdef DEBUG
-            printf("%.2f ",A[f+j]);
-            #endif
-        }
-        #ifdef DEBUG
-        printf("\n");
-        #endif
+		A[i] = randFP(0.0,1.0);
+		#ifdef DEBUG
+		printf("%.2f ",A[i]);
+		#endif
+	}
+    #ifdef DEBUG
+    printf("\n\n\n---\n\n\n");
+    #endif
+	//inicializo converge
+	for (i = 0; i< T;i++){
+		converge[i]= 0;
 	}
 
+	//inicializacion de Pthreads
+	pthread_t misThreads[T];
+	pthread_barrier_init(&barrera, NULL, T);
 
+	timetick = dwalltime();
+
+	int threads_ids[T];
+	for(int id=0;id<T;id++){ 
+		threads_ids[id]=id; 
+		pthread_create(&misThreads[id],NULL,&funcion,(void*)&threads_ids[id]); 
+	}
+
+	for(int id=0;id<T;id++){ 
+		pthread_join(misThreads[id],NULL); 
+	} 
+
+	printf("Tiempo en segundos %f, con %d iteraciones \n", dwalltime() - timetick,numIteracion);
+	pthread_barrier_destroy(&barrera);
+	free(A);
+	free(B);
+	return(0);	
+  }
+
+
+
+void *funcion(void *arg){
+
+    
 
     //variables para algoritmo
-	int converge = 0,numIteracion= 0,inj;
+    int tid= *(int*)arg;
+	int start, end,i,j,inj;
+
+    start = tid * (N/T) + (tid == 0);
+	end = ((tid+1) * (N/T)) - (tid == T-1);
 
 	//Algoritmo de filtrado
-	timetick = dwalltime();    
-    while (!converge){
-    	numIteracion++;
-		converge = 1;
+    while (!convergeG){
+		converge[tid] = 1;
 
 
         //Borde izquierdo superior B[0,0]

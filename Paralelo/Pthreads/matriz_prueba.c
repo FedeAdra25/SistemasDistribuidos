@@ -96,11 +96,6 @@ int main(int argc, char** argv) {
 	return 0;	
   }
 
-void *funcion2(void *arg){
-    printf("START tid: %d",*(int*)arg);
-	pthread_exit(NULL);
-}
-
 void *funcion(void *arg){
     //Variables para el algoritmo y tid
     int tid= *(int*)arg;
@@ -113,14 +108,14 @@ void *funcion(void *arg){
     printf("TID: %d START y calcula desde fila %d hasta fila %d\n",tid,start,end);
     #endif
 
-
 	//Algoritmo de filtrado
-    while (!convergeG){
+    while (!convergeG && numIteracion < 1){
 		converge[tid] = 1;
 
         if(tid==0){
             //Cálculo fila 0 revisando convergencia: B[0,x]
             for(j=1;j<N-1;j++){
+                printf("Hilo %d calcul B[%d][%d]\n",tid,0,j);
                 B[j]= (A[j] + A[j-1] + A [j+1] + A[N+j] + A[N+j-1] + A[N+j+1]) * (1.0/6);
                 //Calculo convergencia
                 if (fabs(B[0]-B[j])>precision){
@@ -130,9 +125,11 @@ void *funcion(void *arg){
             }
             //Calculo el resto de la fila 0 si entré al if de la convergencia en alguna iteración
             for(;j<N-1;j++){
+                printf("Hilo %d calcul B[%d][%d]\n",tid,0,j);
                 B[j]= (A[j] + A[j-1] + A [j+1] + A[N+j] + A[N+j-1] + A[N+j+1]) * (1.0/6);
             }
             //Esquina derecha superior B[0,N-1]
+            printf("Hilo %d calcul B[%d][%d]\n",tid,0,N-1);
             B[N-1] = (A[N-1] + A[N-2] + A[N+(N-1)] +  A[N+(N-2)]) * 0.25;
             //Reviso convergencia esquina derecha superior
             if (converge[tid] && fabs(B[0]-B[N-1])>precision){
@@ -148,6 +145,7 @@ void *funcion(void *arg){
         for(i=start,j=1;converge[tid] && i<end;i++) {
             //Calculo primer elemento de la fila (calculo de todas las primeras columnas)
             //B[i,0] = ...
+            printf("Hilo %d calcul B[%d][%d]\n",tid,i,0);
             B[i*N]=(  A[(i-1)*N] + A[(i-1)*N+1]     //2 elems de fila anterior
                     + A[i*N] + A[i*N+1]             //2 elems de fila actual
                     + A[(i+1)*N] + A[(i+1)*N+1]     //2 elems de fila siguiente
@@ -161,6 +159,7 @@ void *funcion(void *arg){
             //B[i,1] hasta B[i,N-2]
             for(j=1;j<N-1;j++){
                 inj = i*N+j;
+                printf("Hilo %d calcul B[%d][%d] inj = %d \n",tid,i,j, inj);
                 B[inj]=(  A[inj-N-1] + A[inj-N] + A[inj-N+1]    //3 elems de fila anterior
                         + A[inj-1]+ A[inj] + A[inj+1]           //3 elems de fila actual
                         + A[inj+N-1] +A[inj+N] +A[inj+N+1]      //3 elems de fila siguiente
@@ -172,6 +171,7 @@ void *funcion(void *arg){
             }
             //Calculo último elemento de la fila (calculo todas las últimas columnas)
             //B[i,N-1]
+            printf("Hilo %d calcul B[%d][%d]\n",tid,i,N-1);
             B[i*N+N-1]= ( A[(i-1)*N-1+N-1] + A[(i-1)*N+N-1] //2 elems de fila anterior
                         + A[i*N-1+N-1] + A[i*N+N-1]         //2 elems de fila actual
                         + A[(i+1)*N-1+N-1] + A[(i+1)*N+N-1] //2 elems de fila siguiente
@@ -186,6 +186,7 @@ void *funcion(void *arg){
         for(;i<end;i++) {
             //Calculo primer elemento de la fila (calculo de todas las primeras columnas)
             //B[i,0] = ...
+            printf("Hilo %d calcul B[%d][%d]\n",tid,i,0);
             B[i*N] = (A[(i-1)*N] + A[(i-1)*N+1] //2 elems de fila anterior
                     + A[i*N] + A[i*N+1]         //2 elems de fila actual
                     + A[(i+1)*N] + A[(i+1)*N+1] //2 elems de fila siguiente
@@ -195,6 +196,7 @@ void *funcion(void *arg){
             //B[i,1] hasta B[i,N-2]
             for(;j<N-1;j++){
                 inj = i*N+j;
+                printf("Hilo %d calcul B[%d][%d] inj = %d \n",tid,i,j, inj);
                 B[inj] = (A[inj-N-1] + A[inj-N] + A[inj-N+1]    //3 elems de fila anteriors
                         + A[inj-1]+ A[inj] + A[inj+1]           //3 elems de fila actuals
                         + A[inj+N-1] +A[inj+N] +A[inj+N+1]      //3 elems de fila siguientes
@@ -202,6 +204,7 @@ void *funcion(void *arg){
             }
             //Calculo último elemento de la fila (calculo todas las últimas columnas)
             //B[i,N-1], j=N-1
+            printf("Hilo %d calcul B[%d][%d]\n",tid,i,j);
             B[i*N+j] = ( A[(i-1)*N-1+j] + A[(i-1)*N+j]  //2 elems de fila anterior
                         +A[i*N-1+j] + A[i*N+j]          //2 elems de fila actual
                         +A[(i+1)*N-1+j] + A[(i+1)*N+j]  //2 elems de fila siguiente
@@ -216,6 +219,7 @@ void *funcion(void *arg){
         if(tid==T-1){
             //Calculo ULTIMA FILA
             //Primer elemento: Calculo esquina izquierda inferior B[N-1,0]
+            printf("Hilo %d calcul B[%d][%d]\n",tid,N-1,0);
             B[(N-1)*N] = (A[(N-2)*N] +  A[(N-2)*N+1] 
                         + A[(N-1)*N] + A[(N-1)*N+1]
                         ) * 0.25;
@@ -228,6 +232,7 @@ void *funcion(void *arg){
             i=N-1;
             for(j=1;j<N-1;j++){
                 inj= i*N+j;
+                printf("Hilo %d calcul B[%d][%d] inj = %d\n",tid,i,j,inj);
                 B[inj] = ( A[inj-1] + A[inj] + A[inj+1]         //3 elems de fila actual
                         + A[inj-1-N] + A[inj-N] + A[inj+1-N]   //3 elems de fila anterior
                         ) * (1.0/6);
@@ -241,12 +246,14 @@ void *funcion(void *arg){
             //Calculo del resto de columnas sin verificar convergencia
             for(;j<N-1;j++){
                 inj= i*N+j;
+                printf("Hilo %d calcul B[%d][%d] inj = %d\n",tid,i,j,inj);
                 B[inj] = ( A[inj-1] + A[inj] + A[inj+1]         //3 elems de fila actual
                         + A[inj-1-N] + A[inj-N] + A[inj+1-N]   //3 elems de fila anterior
                         ) * (1.0/6);
             }
             //Ultimo elemento: Esquina derecha inferior, B[N-1,N-1]
             //j=N-1
+            printf("Hilo %d calcul B[%d][%d] \n",tid,i,j);
             B[N*N-1] = (A[N*N-2] + A[N*N-1] + A[N*j-2] + A[N*j-1])*0.25;
             //Verifico convergencia de ultimo elemento
             if (converge[tid] && fabs(B[0]-B[N*N-1])>precision){
@@ -281,11 +288,15 @@ void *funcion(void *arg){
 					A = B;
 					B = swapAux;
                     //Calculo esquina izquierda superior B[0,0] para la siguiente iteración
+                    printf("soy el hilo %d caluclo B[0]",tid);
                     B[0] = (A[0] + A[1] + A[N] + A[N+1]) * 0.25;
 				}
 				numIteracion++;
 				
 		}
+        else{
+            printf("Soy el Hilo %d, esperando al cero",tid);
+        }
         //Barrera para que esperen a que el hilo cero valide convergencia global y haga el swap
 		pthread_barrier_wait(&barrera);
 

@@ -142,13 +142,13 @@ int main(int argc, char** argv) {
 		        }
             }
             //Calculo último elemento de la fila (calculo todas las últimas columnas)
-            //B[i,N-1], j=N-1
-            B[i*N+j]=(A[(i-1)*N-1+j] + A[(i-1)*N+j] //2 elems de fila anterior
-                    + A[i*N-1+j] + A[i*N+j]         //2 elems de fila actual
-                    + A[(i+1)*N-1+j] + A[(i+1)*N+j] //2 elems de fila siguiente
+            //B[i,N-1]
+            B[i*N+N-1]=(A[(i-1)*N-1+N-1] + A[(i-1)*N+N-1] //2 elems de fila anterior
+                    + A[i*N-1+N-1] + A[i*N+N-1]         //2 elems de fila actual
+                    + A[(i+1)*N-1+N-1] + A[(i+1)*N+N-1] //2 elems de fila siguiente
                     )*(1.0/6);                      //Divido por 6
             //Verifico convergencia
-            if (fabs(B[0]-B[i*N+j])>precision){
+            if (fabs(B[0]-B[i*N+N-1])>precision){
                 converge = 0;
 		    }
         }

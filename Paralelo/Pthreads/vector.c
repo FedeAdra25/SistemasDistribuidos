@@ -29,7 +29,7 @@ void *funcion(void *arg){
     printf("Hilo id: %d\n",tid);
 	#endif
     /**
-     * TODO: arreglar el debuf y poner los ifdef donde conrrespondan
+     * TODO: arreglar el debug y poner los ifdef donde conrrespondan
      **/
     
 	int start, end,i;
@@ -88,7 +88,8 @@ void *funcion(void *arg){
 					B = swapAux;
 				}
 				numIteracion++;
-				
+				//Calculo el elemento de referencia para la siguiente iteración
+				B[0] = (A[0]+A[1]) * 0.5;
 
 				#ifdef DEBUG
 				printf("vector: ");
@@ -138,10 +139,10 @@ int main(int argc, char** argv) {
 	//inicializacion de Pthreads
 	pthread_t misThreads[T];
 	pthread_barrier_init(&barrera, NULL, T);
+	int threads_ids[T];
 
 	timetick = dwalltime();
-
-	int threads_ids[T];
+	B[0] = (A[0]+A[1]) * 0.5; //Calculo la primera vez el elemento primero para comparar
 	for(int id=0;id<T;id++){ 
 		threads_ids[id]=id; 
 		pthread_create(&misThreads[id],NULL,&funcion,(void*)&threads_ids[id]); 

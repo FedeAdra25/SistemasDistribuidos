@@ -22,7 +22,8 @@ void *funcion(void *arg);
 int N,T, *converge, convergeG=0,numIteracion=0;
 DATA_T *A,*B,*swapAux;
 
-pthread_barrier_t barrera;
+pthread_barrier_t barrera1;
+pthread_barrier_t barrera2;
 
 int main(int argc, char** argv) { 
 	double timetick;
@@ -65,7 +66,8 @@ int main(int argc, char** argv) {
 	}
 	//Inicializacion de Pthreads
 	pthread_t misThreads[T];
-	pthread_barrier_init(&barrera, NULL, T);
+	pthread_barrier_init(&barrera1, NULL, T);
+    pthread_barrier_init(&barrera2, NULL, T);
     int threads_ids[T];
 
     #ifdef DEBUG
@@ -89,7 +91,8 @@ int main(int argc, char** argv) {
 	printf("Tiempo en segundos %f, con %d iteraciones \n", dwalltime() - timetick,numIteracion);
 
     //Libero recursos
-	pthread_barrier_destroy(&barrera);
+    pthread_barrier_destroy(&barrera1);
+	pthread_barrier_destroy(&barrera2);
 	free(A);
 	free(B);
     free(converge);
@@ -109,7 +112,7 @@ void *funcion(void *arg){
     #endif
 
 	//Algoritmo de filtrado
-    while (!convergeG && numIteracion < 1){
+    while (!convergeG && numIteracion < 50){
 		converge[tid] = 1;
 
         if(tid==0){
@@ -262,7 +265,7 @@ void *funcion(void *arg){
         }
 
         //Barrera para todos los hilos
-		pthread_barrier_wait(&barrera);
+		pthread_barrier_wait(&barrera1);
         //Si soy el tid 0
         //Reviso la convergencia de los demas y swapeo los vectores 		
 		if ((tid == 0)){
@@ -282,23 +285,25 @@ void *funcion(void *arg){
 				convergeG = 1;
 				for(i= 0;i < T && convergeG;i++){
 					convergeG = convergeG && converge[i];
-				}
+				}   
+                printMatriz(N,B);
 				if (!convergeG){
 					swapAux = A;
 					A = B;
 					B = swapAux;
                     //Calculo esquina izquierda superior B[0,0] para la siguiente iteración
-                    printf("soy el hilo %d caluclo B[0]",tid);
+                    printf("soy el hilo %d caluclo B[0]\n",tid);
                     B[0] = (A[0] + A[1] + A[N] + A[N+1]) * 0.25;
 				}
 				numIteracion++;
+                
 				
 		}
         else{
-            printf("Soy el Hilo %d, esperando al cero",tid);
+            printf("Soy el Hilo %d, esperando al cero\n",tid);
         }
         //Barrera para que esperen a que el hilo cero valide convergencia global y haga el swap
-		pthread_barrier_wait(&barrera);
+		pthread_barrier_wait(&barrera2);
 
 	}
     #ifdef DEBUG

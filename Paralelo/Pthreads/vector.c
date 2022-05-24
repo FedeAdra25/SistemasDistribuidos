@@ -13,7 +13,8 @@
 double dwalltime();
 //para generar nro random entre min y max
 DATA_T randFP(DATA_T min, DATA_T max);
-
+//para imprimir matriz
+void printVector(int N, DATA_T *M);
 
 //variables compartidas
 int N,T, *converge, convergeG=0,numIteracion= 0;
@@ -38,7 +39,7 @@ void *funcion(void *arg){
 	//DATA_T compare;
 	while(!convergeG){
 		//compare = (A[0]+A[1]) * 0.5;
-		B[0] = (A[0]+A[1]) * 0.5;
+		//B[0] = (A[0]+A[1]) * 0.5;
 
 		//calculo mi parte del promedio y a la vez reviso si converge
 		converge[tid] = 1;
@@ -49,6 +50,7 @@ void *funcion(void *arg){
 				printf("Hilo %d ,B[0]-B[%d] = %.15f - B[0]=%.15f y B[%d]=%.15f\n",tid,i,fabs(B[0]-B[i]),B[0],i,B[i]);
 				#endif
 				converge[tid] = 0;
+				i++;
 				break;
 			}
 		}
@@ -86,15 +88,15 @@ void *funcion(void *arg){
 					swapAux = A;
 					A = B;
 					B = swapAux;
+					//Calculo el elemento de referencia para la siguiente iteración
+					B[0] = (A[0]+A[1]) * 0.5;
 				}
 				numIteracion++;
-				//Calculo el elemento de referencia para la siguiente iteración
-				B[0] = (A[0]+A[1]) * 0.5;
 
 				#ifdef DEBUG
 				printf("vector: ");
 				for(i= 0;i<N;i++){
-					printf("%.10f-",A[i]);
+					printf("%.2f-",A[i]);
 				}
 				printf("\n");
 				printf("-------------------------------------------------\n");
@@ -174,4 +176,11 @@ double dwalltime(){
 	gettimeofday(&tv,NULL);
 	sec = tv.tv_sec + tv.tv_usec/1000000.0;
 	return sec;
+}
+
+void printVector(int N, DATA_T *M){
+	for(int i=0;i<N;i++){
+		printf("%.2f-",M[i]);
+	}
+	printf("\n");
 }

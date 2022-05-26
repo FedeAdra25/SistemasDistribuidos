@@ -1,4 +1,6 @@
-debug=${1:-"-DPRINT_MATRIZ -DPRINT_OPERACION"}
+# debug=${1:-"-DPRINT_MATRIZ -DPRINT_OPERACION"}
+debug=${1:-"-DPRINT_OPERACION"}
+
 
 #Este script genera los archivos compilados de vector.c y matriz.c
 gcc -pthread $debug -o ./out/matriz.o ./matriz.c

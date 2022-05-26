@@ -1,4 +1,4 @@
-debug=${1:-"-DDEBUG_POR_ITERACION -DPRINT_OPERACION"}
+debug=${1:-"-DDEBUG_POR_ITERACION "}
 
 #Este script genera los archivos compilados de vector.c y matriz.c
 gcc $debug -o ./out/matriz.o ./matriz.c

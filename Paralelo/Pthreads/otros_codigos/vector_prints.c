@@ -46,6 +46,9 @@ void *funcion(void *arg){
 		for (i= start;i< end;i++){
 			B[i] = (A[i-1] + A[i] + A[i+1])* (0.33333333); 
 			if (fabs(B[0]-B[i])>precision){
+				#ifdef DEBUG2
+				printf("Hilo %d ,B[0]-B[%d] = %.15f - B[0]=%.15f y B[%d]=%.15f\n",tid,i,fabs(B[0]-B[i]),B[0],i,B[i]);
+				#endif
 				converge[tid] = 0;
 				i++;
 				break;
@@ -65,6 +68,9 @@ void *funcion(void *arg){
 		if (tid == T-1){
 			B[N-1] = (A[N-2]+A[N-1]) *0.5;
 			if (converge[tid] && fabs(B[0]-B[i])>precision){
+				#ifdef DEBUG
+				printf("Hilo %d ,B[0]-B[%d] = %.15f - B[0]=%.15f y B[%d]=%.15f\n",tid,i,fabs(B[0]-B[i]),B[0],i,B[i]);
+				#endif
 				converge[tid] = 0;
 			}
 		}
@@ -88,7 +94,7 @@ void *funcion(void *arg){
 				numIteracion++;
 
 				#ifdef DEBUG
-				printf("Vector: A= ");
+				printf("vector: ");
 				for(i= 0;i<N;i++){
 					printf("%.2f-",A[i]);
 				}

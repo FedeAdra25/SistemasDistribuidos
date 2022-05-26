@@ -52,25 +52,39 @@ int main(int argc, char** argv) {
 
     //Variables para algoritmo
 	int converge = 0,numIteracion= 0,inj;
+
 	//Algoritmo de filtrado
 	timetick = dwalltime();    
-    while (!converge){
+    while (!converge && numIteracion < 10){
     	numIteracion++;
 		converge = 1;
 
+
         #ifdef DEBUG_POR_ITERACION
-        printf("MATRIZ ITERACION: %d - INICIO\n\n\nMatriz:\n", numIteracion);
-        printMatriz(N,A);
+        printf("MATRIZ ITERACION: %d - INICIO\n\n\n", numIteracion);
+        printf("i=%d j=%d converge=%d\n",i,j,converge);
+        printMatriz(N,B);
         #endif
+
+
 
         //-------------------------------//
         //Cálculo de fila 0
+        #ifdef DEBUG
+            printf("Inicio cálculo de fila 0\n--------------\n");
+        #endif   
 
         //Esquina izquierda superior B[0,0]
         B[0] = (A[0] + A[1] + A[N] + A[N+1]) * 0.25;
+        #ifdef PRINT_OPERACION
+        printf("B[%d] = (A[%d] + A[%d] + A[%d] + A[%d]) * %f \n",0,0,1,N,N+1,0.25);
+        #endif
         //Cálculo fila 0 revisando convergencia: B[0,x]
         for(j=1;j<N-1;j++){
             B[j]= (A[j] + A[j-1] + A [j+1] + A[N+j] + A[N+j-1] + A[N+j+1]) * (1.0/6);
+            #ifdef PRINT_OPERACION
+            printf("B[%d] = (A[%d] + A[%d] + A[%d] + A[%d] + A[%d] + A[%d]) * %.5f \n",j,j,j-1,j+1,N+j,N+j-1,N+j+1,1.0/6);
+            #endif
             //Calculo convergencia
             if (fabs(B[0]-B[j])>precision){
 				converge = 0;
@@ -80,16 +94,28 @@ int main(int argc, char** argv) {
         //Calculo el resto de la fila 0 si entré al if de la convergencia en alguna iteración
         for(;j<N-1;j++){
             B[j]= (A[j] + A[j-1] + A [j+1] + A[N+j] + A[N+j-1] + A[N+j+1]) * (1.0/6);
+            #ifdef PRINT_OPERACION
+            printf("B[%d] = (A[%d] + A[%d] + A[%d] + A[%d] + A[%d] + A[%d]) * %f \n",j,j,j-1,j+1,N+j,N+j-1,N+j+1,1.0/6);
+            #endif
         }
 
         //Esquina derecha superior B[0,N-1]
         B[N-1] = (A[N-1] + A[N-2] + A[N+(N-1)] +  A[N+(N-2)]) * 0.25;
+        #ifdef PRINT_OPERACION
+        printf("B[%d] = (A[%d] + A[%d] + A[%d] + A[%d]) * %f \n",N-1,N-1,N-2,N+(N-1),N+(N-2),0.25);
+        #endif
         //Reviso convergencia esquina derecha superior
         if (converge && fabs(B[0]-B[N-1])>precision){
 				converge = 0;
 		}
+        #ifdef DEBUG
+            printf("Fin cálculo de fila 0 (parte superior)\n--------------\n");
+        #endif
         //-------------------------------------
         //Fila 1 hasta N-2 Comienzo cálculos
+        #ifdef DEBUG
+            printf("Inicio cálculo de fila 1 - %d\n--------------\n",N-2);
+        #endif
         
         /* ACLARACIÓN de dudosa relevancia
         Si j viene seteada de arriba al valor j=N-1 y converge=0, va a entrar al siguiente for
@@ -108,6 +134,9 @@ int main(int argc, char** argv) {
                     + A[i*N] + A[i*N+1]             //2 elems de fila actual
                     + A[(i+1)*N] + A[(i+1)*N+1]     //2 elems de fila siguiente
                     ) * (1.0/6);                    //Divido por 6
+            #ifdef PRINT_OPERACION
+            printf("B[%d] = (A[%d] + A[%d] + A[%d] + A[%d] + A[%d] + A[%d]) * %f \n",i*N,(i-1)*N,(i-1)*N+1,i*N,i*N+1,(i+1)*N,(i+1)*N+1,1.0/6);
+            #endif
             //Reviso su convergencia
             if (fabs(B[0]-B[i*N])>precision){
                 converge = 0;
@@ -121,6 +150,9 @@ int main(int argc, char** argv) {
                         + A[inj-1]+ A[inj] + A[inj+1]           //3 elems de fila actual
                         + A[inj+N-1] +A[inj+N] +A[inj+N+1]      //3 elems de fila siguiente
                         ) * (1.0/9);                            //Divido por 9
+                #ifdef PRINT_OPERACION
+                printf("B[%d] = (A[%d] + A[%d] + A[%d] + A[%d] + A[%d] + A[%d]+ A[%d] + A[%d] + A[%d]) * %f \n",inj,inj-N-1,inj-N,inj-N+1,inj-1,inj,inj+1,inj+N-1,inj+N,inj+N+1,1.0/9);
+                #endif
                 if (fabs(B[0]-B[inj])>precision){
                     converge = 0;
                     break;
@@ -132,6 +164,9 @@ int main(int argc, char** argv) {
                     + A[i*N-1+N-1] + A[i*N+N-1]         //2 elems de fila actual
                     + A[(i+1)*N-1+N-1] + A[(i+1)*N+N-1] //2 elems de fila siguiente
                     )*(1.0/6);                      //Divido por 6
+            #ifdef PRINT_OPERACION
+            printf("B[%d] = (A[%d] + A[%d] + A[%d] + A[%d] + A[%d] + A[%d]) * %f \n",i*N+N-1,(i-1)*N-1+N-1,(i-1)*N+N-1,i*N-1+N-1,i*N+N-1,(i+1)*N-1+N-1,(i+1)*N+N-1,1.0/6);
+            #endif
             //Verifico convergencia
             if (fabs(B[0]-B[i*N+N-1])>precision){
                 converge = 0;
@@ -147,6 +182,9 @@ int main(int argc, char** argv) {
                     + A[i*N] + A[i*N+1]         //2 elems de fila actual
                     + A[(i+1)*N] + A[(i+1)*N+1] //2 elems de fila siguiente
                     )*(1.0/6);                  //Divido por 6
+            #ifdef PRINT_OPERACION
+            printf("B[%d] = (A[%d] + A[%d] + A[%d] + A[%d] + A[%d] + A[%d]) * %f \n",i*N,(i-1)*N,(i-1)*N+1,i*N,i*N+1,(i+1)*N,(i+1)*N+1,1.0/6);
+            #endif
             //Calculo de la parte central de la fila
             //B[i,1] hasta B[i,N-2]
             for(;j<N-1;j++){
@@ -155,6 +193,9 @@ int main(int argc, char** argv) {
                         + A[inj-1]+ A[inj] + A[inj+1]           //3 elems de fila actuals
                         + A[inj+N-1] +A[inj+N] +A[inj+N+1]      //3 elems de fila siguientes
                          )*(1.0/9);                             //Divido por 9s
+                #ifdef PRINT_OPERACION
+                printf("B[%d] = (A[%d] + A[%d] + A[%d] + A[%d] + A[%d] + A[%d]+ A[%d] + A[%d] + A[%d]) * %f\n",inj,inj-N-1,inj-N,inj-N+1,inj-1,inj,inj+1,inj+N-1,inj+N,inj+N+1,1.0/9);
+                #endif
             }
             //Calculo último elemento de la fila (calculo todas las últimas columnas)
             //B[i,N-1], j=N-1
@@ -162,14 +203,27 @@ int main(int argc, char** argv) {
                         +A[i*N-1+j] + A[i*N+j]          //2 elems de fila actual
                         +A[(i+1)*N-1+j] + A[(i+1)*N+j]  //2 elems de fila siguiente
                         )*(1.0/6);                      //Divido por 6
+            #ifdef PRINT_OPERACION
+            printf("B[%d] = (A[%d] + A[%d] + A[%d] + A[%d] + A[%d] + A[%d]) * %.f\n",i*N+j,(i-1)*N-1+N-1,(i-1)*N+N-1,i*N-1+N-1,i*N+N-1,(i+1)*N-1+N-1,(i+1)*N+N-1,1.0/6);
+            #endif
             //Preparo j para la siguiente iteración ya que el for de esta parte no inicializa j
             j=1;
         }
+        #ifdef DEBUG
+            printf("FIN cálculo de fila 1 - %d\n--------------\n",N-2);
+        #endif
+
         //----------------------------------------
+        #ifdef DEBUG
+            printf("INICIO cálculo de fila %d\n--------------\n",N-1);
+        #endif
         //Calculo esquina izquierda inferior B[N-1,0]
         B[(N-1)*N] = (A[(N-2)*N] +  A[(N-2)*N+1] 
                     + A[(N-1)*N] + A[(N-1)*N+1]
                     ) * 0.25;
+        #ifdef PRINT_OPERACION
+        printf("B[%d] = (A[%d] + A[%d] + A[%d] + A[%d]) * %.f\n",(N-1)*N,(N-2)*N,(N-2)*N+1,(N-1)*N,(N-1)*N+1,0.25);
+        #endif
         //Verifico convergencia
         if (converge && fabs(B[0]-B[(N-1)*N])>precision){
             converge = 0;
@@ -184,6 +238,9 @@ int main(int argc, char** argv) {
             B[inj] = ( A[inj-1] + A[inj] + A[inj+1]         //3 elems de fila actual
                      + A[inj-1-N] + A[inj-N] + A[inj+1-N]   //3 elems de fila anterior
                      ) * (1.0/6);
+            #ifdef PRINT_OPERACION
+            printf("B[%d] = (A[%d] + A[%d] + A[%d] + A[%d] + A[%d] + A[%d]) * %.f \n",inj,inj-1,inj,inj+1,inj-N-1,inj-N,inj-N+1,1.0/6);
+            #endif
             //calculo de convergencia
             if (fabs(B[0]-B[inj])>precision){
 				converge = 0;
@@ -196,6 +253,9 @@ int main(int argc, char** argv) {
             B[inj] = ( A[inj-1] + A[inj] + A[inj+1]         //3 elems de fila actual
                      + A[inj-1-N] + A[inj-N] + A[inj+1-N]   //3 elems de fila anterior
                      ) * (1.0/6);
+            #ifdef PRINT_OPERACION
+            printf("B[%d] = (A[%d] + A[%d] + A[%d] + A[%d] + A[%d] + A[%d]) * %.f \n",inj,inj-1,inj,inj+1,inj-N-1,inj-N,inj-N+1,1.0/6);
+            #endif
         }
 		//Esquina derecha inferior, B[N-1,N-1]
         //j=N-1
@@ -204,8 +264,17 @@ int main(int argc, char** argv) {
         if (converge && fabs(B[0]-B[N*N-1])>precision){
             converge = 0;
         }
+        #ifdef DEBUG
+            printf("FIN cálculo de fila %d\n--------------\n",N-1);
+        #endif
 
         //-------------------------------------
+
+        #ifdef DEBUG_POR_ITERACION
+        printf("MATRIZ ITERACION: %d - FIN\n\n\n", numIteracion);
+        printf("i=%d j=%d converge=%d\n",i,j,converge);
+        printMatriz(N,B);
+        #endif
 
         //SI TODAVÍA NO CONVERGE SWAPEO PARA LA SIGUIENTE ITERACIÓN
         if(!converge){
@@ -216,7 +285,7 @@ int main(int argc, char** argv) {
 	}
 
 
-    
+
 	printf("Tiempo en segundos %f, con %d iteraciones \n", dwalltime() - timetick,numIteracion);
     printf("-------------------\n");
     free(A);

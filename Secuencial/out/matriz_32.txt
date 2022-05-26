@@ -1,3 +1,0 @@
-Matriz size 32
-Tiempo en segundos 0.004284, con 472 iteraciones 
--------------------

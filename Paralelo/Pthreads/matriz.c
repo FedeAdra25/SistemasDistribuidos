@@ -110,7 +110,7 @@ void *funcion(void *arg){
 
 
 	//Algoritmo de filtrado
-    while (!convergeG && numIteracion < 100){
+    while (!convergeG && numIteracion < 40){
 		converge[tid] = 1;
 
         if(tid==0){
@@ -252,20 +252,17 @@ void *funcion(void *arg){
         //Reviso la convergencia de los demas y swapeo los vectores 		
 		if (tid == 0){
 
+				numIteracion++;
                 #ifdef DEBUG_POR_ITERACION
-                printf("MATRIZ ITERACION: %d - INICIO\n\n\nMatriz:\n", numIteracion);
+                printf("MATRIZ A ITERACION: %d\n", numIteracion);
                 printMatriz(N,A);
-                printConverge(converge);
+                //printConverge(converge);
                 #endif
 
 				convergeG = 1;
 				for(i= 0;i < T && convergeG;i++){
 					convergeG = convergeG && converge[i];
 				}
-                #ifdef PRINT_MATRIZ
-                printf("Iteracion %d",numIteracion);
-                printMatriz(N,B);
-                #endif
 				if (!convergeG){
 					swapAux = A;
 					A = B;
@@ -273,7 +270,6 @@ void *funcion(void *arg){
                     //Calculo esquina izquierda superior B[0,0] para la siguiente iteración
                     B[0] = (A[0] + A[1] + A[N] + A[N+1]) * 0.25;
 				}
-				numIteracion++;
 				
 		}
 
@@ -311,7 +307,7 @@ void printMatriz(int N, DATA_T* M){
     for(i=0;i<N;i++) {
         f=i*N;
         for(j=0;j<N;j++){
-            printf("%.2f ",M[f+j]);
+            printf("%.5f ",M[f+j]);
         }
     printf("\n");
     }
@@ -320,7 +316,6 @@ void printMatriz(int N, DATA_T* M){
 
 void printConverge(int* p){
     int i;
-    printf("\n");
     for(i=0;i<T;i++){
         printf("converge[%d]=%d - ",i,p[i]);
     }

@@ -54,12 +54,12 @@ int main(int argc, char** argv) {
 	int converge = 0,numIteracion= 0,inj;
 	//Algoritmo de filtrado
 	timetick = dwalltime();    
-    while (!converge){
+    while (!converge && numIteracion<40){
     	numIteracion++;
 		converge = 1;
 
         #ifdef DEBUG_POR_ITERACION
-        printf("MATRIZ ITERACION: %d - INICIO\n\n\nMatriz:\n", numIteracion);
+        printf("MATRIZ A ITERACION: %d\n", numIteracion);
         printMatriz(N,A);
         #endif
 
@@ -248,7 +248,7 @@ void printMatriz(int N, DATA_T* B){
     for(i=0;i<N;i++) {
         f=i*N;
         for(j=0;j<N;j++){
-            printf("%.2f ",B[f+j]);
+            printf("%.5f ",B[f+j]);
         }
     printf("\n");
     }

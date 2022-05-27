@@ -3,7 +3,7 @@
 #include <math.h>
 #include <sys/time.h>
 
-#define DATA_T double
+#define DATA_T float
 #define precision 0.01
 
 //Para calcular tiempo
@@ -54,14 +54,9 @@ int main(int argc, char** argv) {
 	int converge = 0,numIteracion= 0,inj;
 	//Algoritmo de filtrado
 	timetick = dwalltime();    
-    while (!converge && numIteracion<40){
+    while (!converge ){
     	numIteracion++;
 		converge = 1;
-
-        #ifdef DEBUG_POR_ITERACION
-        printf("MATRIZ A ITERACION: %d\n", numIteracion);
-        printMatriz(N,A);
-        #endif
 
         //-------------------------------//
         //Cálculo de fila 0
@@ -147,6 +142,7 @@ int main(int argc, char** argv) {
                     + A[i*N] + A[i*N+1]         //2 elems de fila actual
                     + A[(i+1)*N] + A[(i+1)*N+1] //2 elems de fila siguiente
                     )*(1.0/6);                  //Divido por 6
+            //printf("pos [%d], A[%d] = %f + A[%d]= %f\n",i*N,(i-1)*N,A[(i-1)*N],(i-1)*N+1,A[(i-1)*N+1]);
             //Calculo de la parte central de la fila
             //B[i,1] hasta B[i,N-2]
             for(;j<N-1;j++){
@@ -213,6 +209,13 @@ int main(int argc, char** argv) {
             A=B;
             B=swapAux;
         }
+
+        #ifdef DEBUG_POR_ITERACION
+        if(numIteracion > 230){
+            printf("MATRIZ A ITERACION: %d\n", numIteracion);
+            printMatriz(N,A);
+        }
+        #endif
 	}
 
 
@@ -248,7 +251,7 @@ void printMatriz(int N, DATA_T* B){
     for(i=0;i<N;i++) {
         f=i*N;
         for(j=0;j<N;j++){
-            printf("%.5f ",B[f+j]);
+            printf("%.7f ",B[f+j]);
         }
     printf("\n");
     }

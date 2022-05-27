@@ -10,7 +10,7 @@ gcc -pthread $debug -o ./out/vector.o ./vector.c
 #Pruebas actuales
 gcc -pthread $debug -o ./out/matriz.o ./matriz.c
 #gcc -pthread -o ./out/matriz_prueba.o ./matriz_prueba.c
-./out/matriz.o 32 2 "Matriz 8x4" > out/results.txt
+./out/matriz.o 32 8 "Matriz 8x4" > out/results.txt
 # ./out/matriz.o 8 4 "Matriz 8x4" > out/results4.txt
 # ./out/matriz.o 8 2 "Matriz 8x2" > out/results2.txt
 

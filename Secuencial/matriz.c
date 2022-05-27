@@ -3,7 +3,7 @@
 #include <math.h>
 #include <sys/time.h>
 
-#define DATA_T float
+#define DATA_T double
 #define precision 0.01
 
 //Para calcular tiempo

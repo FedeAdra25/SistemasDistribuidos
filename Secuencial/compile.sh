@@ -1,6 +1,6 @@
 #-DDEBUG_POR_ITERACION
 
-debug=${1:-"-DDEBUG_POR_ITERACION"} 
+debug=${1:-""} 
 
 # Guardamos el directorio del script
 SCRIPT_DIR=$(dirname $0)
@@ -15,7 +15,7 @@ gcc $debug -o ./out/vector.o ./vector.c
 #Matriz
 
 # ./out/matriz.o 1024 "Matriz 1024" > ./out/results.txt
-./out/matriz.o 32 "Matriz size 16"> ./out/results.txt
+./out/matriz.o 1024 "Secuencial"> ./out/results.txt
 #./out/matriz.o 1024 "Matriz size 1024">> ./out/results.txt
 #./out/matriz.o 2048 "Matriz size 2048">> ./out/results.txt
 

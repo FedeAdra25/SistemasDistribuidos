@@ -110,7 +110,7 @@ void *funcion(void *arg){
 
 
 	//Algoritmo de filtrado
-    while (!convergeG && numIteracion < 280){
+    while (!convergeG ){
 		converge[tid] = 1;
 
         if(tid==0){

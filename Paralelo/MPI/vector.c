@@ -161,6 +161,8 @@ int funcion(int id, int N, int numP){
     return 0;
 }
 
+
+/*
 int funcionDelMaster(int N, int numP)
 {
     DATA_T *A, *B;
@@ -188,17 +190,17 @@ int funcionDelMaster(int N, int numP)
     timetick = dwalltime();
     B[0] = (A[0]+A[1])*0.5; //Calculo primer elemento antes de entrar
     while(!converge){
-        /*Sin scatter
-        for (i = 1; i < numP; i++)
-        {
-            offset = i*N/numP;
-            //*Enviar B[0]*
-            MPI_Send(&B[0],1,MPI_DATA_T,i,99,MPI_COMM_WORLD);
-            //*Enviar A para calcular*
-            MPI_Send(A+(i*N/numP), N / numP, MPI_DATA_T, i, 99, MPI_COMM_WORLD);
-        }
-        */
-       MPI_Scatter(A,N/numP,MPI_DATA_T,B/*+id*(N/numP) en slave*/,N/numP,MPI_DATA_T,0,MPI_COMM_WORLD);
+        //Sin scatter
+        // for (i = 1; i < numP; i++)
+        // {
+        //     offset = i*N/numP;
+        //     //*Enviar B[0]*
+        //     MPI_Send(&B[0],1,MPI_DATA_T,i,99,MPI_COMM_WORLD);
+        //     //*Enviar A para calcular*
+        //     MPI_Send(A+(i*N/numP), N / numP, MPI_DATA_T, i, 99, MPI_COMM_WORLD);
+        // }
+
+       MPI_Scatter(A,N/numP,MPI_DATA_T,B,N/numP,MPI_DATA_T,0,MPI_COMM_WORLD);
         start=1;
         end=N/numP;
         for(i=1;i<N/numP;i++){
@@ -231,7 +233,8 @@ int funcionDelMaster(int N, int numP)
 
     return 0;
 }
-
+*/
+/*
 int funcionSlave(int id, int N, int P)
 {
     DATA_T *A, *B, *C;
@@ -264,7 +267,7 @@ int funcionSlave(int id, int N, int P)
     free(C);
     return 0;
 }
-
+*/
 double dwalltime()
 {
     double sec;

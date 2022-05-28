@@ -6,7 +6,7 @@
 
 
 #define DATA_T double
-#define precision 0.01
+#define precision (1.0/100)
 
 
 //Para calcular tiempo
@@ -23,59 +23,48 @@ DATA_T *A,*B,*swapAux;
 pthread_barrier_t barrera;
 
 
-
 void *funcion(void *arg){
     int tid= *(int*)arg;
-	#ifdef DEBUG
-    printf("Hilo id: %d\n",tid);
-	#endif
-    /**
-     * TODO: arreglar el debug y poner los ifdef donde conrrespondan
-     **/
-    
 	int start, end,i;
 	start = tid * (N/T) + (tid == 0);
 	end = ((tid+1) * (N/T)) - (tid == T-1);
+	#ifdef DEBUG
+    printf("Hilo id: %d START from: %d to %d\n",tid,start,end);
+	#endif
+
+
 	//DATA_T compare;
 	while(!convergeG){
-		//compare = (A[0]+A[1]) * 0.5;
-		//B[0] = (A[0]+A[1]) * 0.5;
-
-		//calculo mi parte del promedio y a la vez reviso si converge
+		//Calculo mi parte del promedio y a la vez reviso si converge
 		converge[tid] = 1;
-		for (i= start;i< end;i++){
-			B[i] = (A[i-1] + A[i] + A[i+1])* (0.33333333); 
-			if (fabs(B[0]-B[i])>precision){
+		for(i=start;i<end;i++){
+			B[i] = (A[i-1] + A[i] + A[i+1]) * (1.0/3); 
+			if (fabs(B[0]-B[i]) > precision){
 				converge[tid] = 0;
 				i++;
 				break;
 			}
 		}
-
-		//calculo el promedio de los numeros que me faltaron antes de descubrir la divergencia
-		for (;i< end;i++){
-			B[i] = (A[i-1] + A[i] + A[i+1])* (0.33333333);
+		//Calculo el promedio de los numeros que me faltaron antes de descubrir la divergencia
+		for (;i<end;i++){
+			B[i] = (A[i-1] + A[i] + A[i+1])* (1.0/3);
 		}
-		
-		#ifdef DEBUG
-			printf("Hilo id: %d ralizo %d iteraciones en la %d iteracion\n",tid,i-start, numIteracion);
-		#endif
 
-		//reviso el ultimo valor
-		if (tid == T-1){
+		//Calculo el ultimo valor si soy el ultimo thread
+		if (tid==T-1){
 			B[N-1] = (A[N-2]+A[N-1]) *0.5;
 			if (converge[tid] && fabs(B[0]-B[i])>precision){
 				converge[tid] = 0;
 			}
 		}
 
-		//barrera para todos los hilos
+		//Barrera para todos los hilos
 		pthread_barrier_wait(&barrera);
 
-		//el hilo 0 revisa las convergencia de los demas y swapea los vectores 		
-		if ((tid == 0)){
+		//El hilo 0 revisa las convergencia de los demás y swapea los vectores 		
+		if (tid == 0){
 				convergeG = 1;
-				for(i= 0;i < T && convergeG;i++){
+				for(i=0; i<T && convergeG;i++){
 					convergeG = convergeG && converge[i];
 				}
 				if (!convergeG){
@@ -86,13 +75,9 @@ void *funcion(void *arg){
 					B[0] = (A[0]+A[1]) * 0.5;
 				}
 				numIteracion++;
-
 				#ifdef DEBUG
-				printf("Vector: A= ");
-				for(i= 0;i<N;i++){
-					printf("%.2f-",A[i]);
-				}
-				printf("\n");
+				printf("Iteracion: %d\n",numIteracion);
+				printVector(N,A);				
 				printf("-------------------------------------------------\n");
 				#endif
 		} 
@@ -101,15 +86,32 @@ void *funcion(void *arg){
 		pthread_barrier_wait(&barrera);
 	}
 
+
+	#ifdef DEBUG
+    printf("Hilo id: %d STOP\n",tid);
+	#endif
     pthread_exit(NULL);
 }
 
 
 
 int main(int argc, char** argv) {
-	N = atoi(argv[1]); 
-	T = atoi(argv[2]); 
 	double timetick;
+
+	if(argc<3){
+        printf("Error: debe enviar el tamaño del vector y cantidad de threads \nRecibido %d argumentos\n",argc);
+        printf("Forma: ./out.o N T (ej: ./out.o 256 4)\n");
+        return 2;
+    }
+    N = atoi(argv[1]);
+    T = atoi(argv[2]);
+    if(N<8){
+        printf("N debe ser mayor a 8 (N=%d)",N);
+        return 0;
+    }
+    if(argc>3){
+        printf("%s\n",argv[3]);
+    }
 
 	A = (DATA_T*) malloc(sizeof(DATA_T)*N);
 	B = (DATA_T*) malloc(sizeof(DATA_T)*N);
@@ -120,14 +122,11 @@ int main(int argc, char** argv) {
 	//inicializo vector
 	for(i=0;i<N;i++) {
 		A[i] = randFP(0.0,1.0);
-		#ifdef DEBUG
-		printf("%.2f ",A[i]);
-		#endif
 	}
 	#ifdef DEBUG
-	printf("\n\n\n---\n\n\n");
+	printVector(N,A);
 	#endif
-	//inicializo converge
+	//Inicializo converge
 	for (i = 0; i< T;i++){
 		converge[i]= 0;
 	}
@@ -173,8 +172,9 @@ double dwalltime(){
 }
 
 void printVector(int N, DATA_T *M){
-	for(int i=0;i<N;i++){
-		printf("%.2f-",M[i]);
+	printf("Vector = [");
+	for(int i= 0;i<N;i++){
+		printf("%.8f, ",M[i]);
 	}
-	printf("\n");
+	printf("]\n");
 }

@@ -1,0 +1,30 @@
+Algoritmo Paralelo
+Matriz 4 threads
+Matriz de 512x512 T=4
+Tiempo en segundos 1.328651, con 1786 iteraciones 
+Matriz de 1024x1024 T=4
+Tiempo en segundos 10.965800, con 3639 iteraciones 
+Matriz de 2048x2048 T=4
+Tiempo en segundos 54.939566, con 4785 iteraciones 
+Matriz 8 threads
+Matriz de 512x512 T=8
+Tiempo en segundos 1.134868, con 1786 iteraciones 
+Matriz de 1024x1024 T=8
+Tiempo en segundos 9.071949, con 3639 iteraciones 
+Matriz de 2048x2048 T=8
+Tiempo en segundos 48.576482, con 4785 iteraciones 
+=======
+Vector 4 threads
+Vector de 512 T=4
+Tiempo en segundos 1.053641, con 121006 iteraciones 
+Vector de 1024 T=4
+Tiempo en segundos 3.419254, con 377475 iteraciones 
+Vector de 2048 T=4
+Tiempo en segundos 9.681680, con 932175 iteraciones 
+Vector 8 threads
+Vector de 512 T=8
+Tiempo en segundos 1.897025, con 121006 iteraciones 
+Vector de 1024 T=8
+Tiempo en segundos 6.322092, con 377475 iteraciones 
+Vector de 2048 T=8
+Tiempo en segundos 16.099775, con 932175 iteraciones 

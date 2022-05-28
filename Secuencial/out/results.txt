@@ -1,0 +1,22 @@
+Algoritmo secuencial
+Matriz
+Matriz de 512x512
+Tiempo en segundos 4.269619, con 1786 iteraciones 
+-------------------
+Matriz de 1024x1024
+Tiempo en segundos 37.306557, con 3640 iteraciones 
+-------------------
+Matriz de 2048x2048
+Tiempo en segundos 200.270106, con 4850 iteraciones 
+-------------------
+=======
+Vector
+Vector de 512
+Tiempo en segundos 0.221499, con 121006 iteraciones 
+-------------------
+Vector de 1024
+Tiempo en segundos 1.367529, con 377475 iteraciones 
+-------------------
+Vector de 2048
+Tiempo en segundos 6.506935, con 932175 iteraciones 
+-------------------

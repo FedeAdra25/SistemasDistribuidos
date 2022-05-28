@@ -38,22 +38,22 @@ done
 
 #Matriz
 echo "Algoritmo Paralelo" > ./out/results.txt
-echo "Matriz 2 threads" >> ./out/results.txt
-./out/matriz.o 512 2 "Matriz de 512x512 T=2" >> ./out/results.txt
-./out/matriz.o 1024 2 "Matriz de 1024x1024 T=2">> ./out/results.txt
-./out/matriz.o 2048 2 "Matriz de 2048x2048 T=2">> ./out/results.txt
 echo "Matriz 4 threads" >> ./out/results.txt
 ./out/matriz.o 512 4 "Matriz de 512x512 T=4" >> ./out/results.txt
 ./out/matriz.o 1024 4 "Matriz de 1024x1024 T=4">> ./out/results.txt
 ./out/matriz.o 2048 4 "Matriz de 2048x2048 T=4">> ./out/results.txt
+echo "Matriz 8 threads" >> ./out/results.txt
+./out/matriz.o 512 8 "Matriz de 512x512 T=8" >> ./out/results.txt
+./out/matriz.o 1024 8 "Matriz de 1024x1024 T=8">> ./out/results.txt
+./out/matriz.o 2048 8 "Matriz de 2048x2048 T=8">> ./out/results.txt
 
 #Vector
 echo "=======" >> ./out/results.txt
-echo "Vector 2 threads" >> ./out/results.txt
-./out/vector.o 512 2 "Vector de 512 T=2">> ./out/results.txt
-./out/vector.o 1024 2 "Vector de 1024 T=2">> ./out/results.txt
-./out/vector.o 2048 2 "Vector de 2048 T=2">> ./out/results.txt
 echo "Vector 4 threads" >> ./out/results.txt
 ./out/vector.o 512 4 "Vector de 512 T=4">> ./out/results.txt
 ./out/vector.o 1024 4 "Vector de 1024 T=4">> ./out/results.txt
 ./out/vector.o 2048 4 "Vector de 2048 T=4">> ./out/results.txt
+echo "Vector 8 threads" >> ./out/results.txt
+./out/vector.o 512 8 "Vector de 512 T=8">> ./out/results.txt
+./out/vector.o 1024 8 "Vector de 1024 T=8">> ./out/results.txt
+./out/vector.o 2048 8 "Vector de 2048 T=8">> ./out/results.txt

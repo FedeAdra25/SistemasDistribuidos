@@ -45,6 +45,10 @@ int main(int argc, char **argv)
         printf("%s\n",argv[2]);
     }
 
+    //Misma funcion para master y slave
+    funcion(miID,N,nrProcesos);
+
+    /*
     if (miID == 0)
     {
         funcionDelMaster(N, nrProcesos);
@@ -53,6 +57,7 @@ int main(int argc, char **argv)
     {
         funcionSlave(miID, N, nrProcesos);
     }
+    */
 
     MPI_Finalize(); // Finaliza el ambiente MPI. No debe haber sentencias después
     

@@ -183,11 +183,14 @@ void funcionDelMaster(int N, int nrProcesos) {
 
     printf("Tiempo en segundos: %f\n", dwalltime() - timetick);
 
+    free(A);
+    free(B);
+    
 }
 
 void funcionSlave(int tid, int N, int nrProcesos) {
 	DATA_T *A, *B, *swapAux;
-	int bloque = (N / nrProcesos) + 2 - (tid == nrProcesos-1);
+	int bloque = (N / nrProcesos) ;
 	int converge,i,convergeG = 0, numIteracion=0;
 	DATA_T data0;
 
@@ -197,16 +200,15 @@ void funcionSlave(int tid, int N, int nrProcesos) {
     #endif
 
 	// Aloca memoria para los vectores
-	A = (DATA_T *) malloc(sizeof(DATA_T) * bloque);
-	B = (DATA_T *) malloc(sizeof(DATA_T) * bloque);
+	A = (DATA_T *) malloc(sizeof(DATA_T) * bloque + 2 - (tid == nrProcesos-1) );
+	B = (DATA_T *) malloc(sizeof(DATA_T) * bloque + 2 - (tid == nrProcesos-1) );
 
     // Recibir el bloque
-    // MPI_Recv(A, bloque, MPI_DATA_T, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    MPI_Scatter(&A[1], bloque, MPI_DATA_T, &A[1], bloque, MPI_DATA_T, 0, MPI_COMM_WORLD);
+    MPI_Scatter(&A[1], 0, MPI_DATA_T, &A[1], bloque, MPI_DATA_T, 0, MPI_COMM_WORLD);
 
     #ifdef PRINT_VEC
         printf("Scatter Hilo%d :",tid);
-        for(int i=0;i<bloque;i++){
+        for(int i=0;i<bloque + 2 - (tid == nrProcesos-1);i++){
             printf("%.5f ",A[i]);
         }
         printf("\n");
@@ -228,13 +230,13 @@ void funcionSlave(int tid, int N, int nrProcesos) {
         if (tid != nrProcesos-1) {
 			// envio mis valores a los vecinos
 			MPI_Isend(&A[1], 1, MPI_DATA_T, tid-1, 1, MPI_COMM_WORLD, &request);
-			MPI_Isend(&A[bloque-1], 1, MPI_DATA_T, tid+1, 1, MPI_COMM_WORLD, &request);
+			MPI_Isend(&A[bloque], 1, MPI_DATA_T, tid+1, 1, MPI_COMM_WORLD, &request);
 
 			// recibo el valor del vecino izquierdo
 			MPI_Irecv(A, 1, MPI_DATA_T, tid-1, 1, MPI_COMM_WORLD, &request);
 			MPI_Wait(&request, &status);
 			// recibo el valor del vecino derecho
-			MPI_Irecv(&A[bloque], 1, MPI_DATA_T, tid+1, 1, MPI_COMM_WORLD, &request);
+			MPI_Irecv(&A[bloque+1], 1, MPI_DATA_T, tid+1, 1, MPI_COMM_WORLD, &request);
 			MPI_Wait(&request, &status);
 
 		} else {
@@ -252,7 +254,7 @@ void funcionSlave(int tid, int N, int nrProcesos) {
 
         #ifdef PRINT_VEC
         printf("VecA Hilo%d :",tid);
-        for(int i=0;i<bloque;i++){
+        for(int i=0;i<bloque + 2 - (tid == nrProcesos-1);i++){
             printf("%.5f ",A[i]);
         }
         printf("\n");
@@ -261,7 +263,7 @@ void funcionSlave(int tid, int N, int nrProcesos) {
 
         converge = 1;
         // calculo Promedio y convergencia
-        for(i=1;i<bloque;i++){
+        for(i=1;i<bloque+1 - (tid == nrProcesos-1) ;i++){
 			B[i] = (A[i-1] + A[i] + A[i+1]) * (1.0/3); 
 			if (fabs(data0-B[i]) > precision){
                 printf("Hilo%d ERROR CONVERGENCIA pos %d data0= %f, B[%d]=%f\n",tid,i,data0,i,B[i]);
@@ -271,13 +273,13 @@ void funcionSlave(int tid, int N, int nrProcesos) {
 			}
 		}
 		//Calculo el promedio de los numeros que me faltaron antes de descubrir la divergencia
-		for (;i<bloque;i++){
+		for (;i<bloque+1 - (tid == nrProcesos-1) ;i++){
 			B[i] = (A[i-1] + A[i] + A[i+1])* (1.0/3);
 		}
 
 
         if(tid == nrProcesos-1){
-            B[bloque-1] = (A[bloque-2]+A[bloque-1]) *0.5;
+            B[bloque] = (A[bloque-1]+A[bloque]) *0.5;
 			if (converge && fabs(data0-B[i])>precision){
 				converge = 0;
 			}
@@ -290,15 +292,21 @@ void funcionSlave(int tid, int N, int nrProcesos) {
 
         #ifdef PRINT_VEC
         printf("VecB Hilo%d iteracion %d :",tid,numIteracion);
-        for(int i=0;i<bloque;i++){
+        for(int i=0;i<bloque + 2 - (tid == nrProcesos-1);i++){
             printf("%.5f ",B[i]);
         }
-        printf("\n ----------------- \n \n ");
-        sleep(3);
+        printf("\n ");
         #endif
 
         // Chequeo de convergencia global
         MPI_Allreduce(&converge, &convergeG, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
+
+        #ifdef PRINT_VEC
+        if (tid == 1)
+            printf("\n\n -------------------------- \n ");
+        else
+            sleep(2);
+        #endif
 
         #ifdef CONVERGE
         printf("Hilo%d converge: %d convergeG: %d",tid,converge,convergeG);
@@ -318,6 +326,9 @@ void funcionSlave(int tid, int N, int nrProcesos) {
         }
 
 	}
+
+    free(A);
+    free(B);
 }
 
 DATA_T randFP(DATA_T min, DATA_T max) {

@@ -30,7 +30,7 @@ DATA_T randFP(DATA_T min, DATA_T max);
 int funcionSlave(int, int, int);
 int funcionDelMaster(int, int);
 int procesamientoMaster(DATA_T *A, DATA_T *B, int N, int filasCalculo);
-int porcesamientoSlave(DATA_T *A, DATA_T *B, int N, int filasCalculo, int tid,int data0,int nrProcesos);
+int procesamientoSlave(DATA_T *A, DATA_T *B, int N, int filasCalculo, int tid,int data0,int nrProcesos);
 
 int main(int argc, char **argv)
 {
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
 
 int funcionDelMaster(int N, int nrProcesos)
 {
-    DATA_T *A, *B, *swapAux;
+    DATA_T *A, *B, *swapAux,*original;
 	int bloque = (N * N) / nrProcesos;
 	int converge, i,inj,numIteraciones = 0;
 	int convergeG = 0;
@@ -87,7 +87,8 @@ int funcionDelMaster(int N, int nrProcesos)
 
     // Aloca memoria para los vectores
 	A = (DATA_T *) malloc(sizeof(DATA_T) * N * N);
-	B = (DATA_T *) malloc(sizeof(DATA_T) * (bloque + N) );   //sus filas a procesar mas una extra para el calculo de convergencia
+    original=A;
+	B = (DATA_T *) malloc(sizeof(DATA_T) * (bloque + N) );
 
     // Inicializacion de la matriz
 	int j,f;
@@ -97,28 +98,23 @@ int funcionDelMaster(int N, int nrProcesos)
             A[f+j] = randFP(0.0,1.0);
         }
 	}
-    #ifdef PRINT_MATRIZ
-    printMatriz(N,N,A);
-    sleep(3);
-    #endif
-
+    
     timetick = dwalltime();
-
     // Enviar los bloques a cada proceso
     MPI_Scatter(A, bloque, MPI_DATA_T, A, bloque, MPI_DATA_T, ROOT_P, MPI_COMM_WORLD);
 
-    #ifdef PRINT_MATRIZ
-        printf("Scatter MASTER:\n");
-        printMatriz(N-1,N,A);
-        sleep(3);
+    #ifdef DEBUG
+    printf("Matriz inicial: \n");
+    printMatriz(N,N,A);
     #endif
 
-    while(!convergeG){
+    while(!convergeG && numIteraciones<10){
         B[0] = (A[0] + A[1] + A[N] + A[N+1]) * 0.25; //Esquina izquierda superior B[0,0]
+        printf("%.7f=%.7f+%.7f+%.7f+%.7f\n",B[0],A[0],A[1],A[N],A[N+1]);
         
         //Envio el dato para chequear convergencia
    	    MPI_Bcast(B, 1, MPI_DATA_T, ROOT_P, MPI_COMM_WORLD);
-
+        printf("%.7f=%.7f+%.7f+%.7f+%.7f\n",B[0],A[0],A[1],A[N],A[N+1]);
         MPI_Request request;
 	    MPI_Status status;
 
@@ -128,35 +124,23 @@ int funcionDelMaster(int N, int nrProcesos)
         MPI_Irecv(&A[bloque], N, MPI_DATA_T, 1, 1, MPI_COMM_WORLD, &request);
         MPI_Wait(&request, &status);
 
-        #ifdef PRINT_MATRIZ
-        printf("MASTER postPasaje: \n");
-        printMatriz(N-1,N,A);
-        sleep(3);
-        #endif
 
         //procesamiento
         converge = procesamientoMaster(A,B,N,N/nrProcesos);
 
-        #ifdef PROCE_MASTER
-        printf("MASTER termino procesamiento iteracion:%d\n",numIteraciones);
-        sleep(1);
-        #endif
-
         // Chequeo convergencia global
   	    MPI_Allreduce(&converge, &convergeG, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
 
-        #ifdef CONVERGE
-        printf("MASTER converge:%d convergeG: %d numIteracion: %d\n",converge,convergeG,numIteraciones);
+        if(!convergeG){
+            swapAux = A;
+            A = B;
+            B= swapAux;
+            numIteraciones++;
+        }
+        #ifdef DEBUG
+        printf("Iteracion: %d. Matriz: \n",numIteraciones);
+        printMatriz(N/nrProcesos,N,A);
         #endif
-
-        //swapeo
-        // if(!convergeG){
-        // swapAux = A;
-        // A = B;
-        // B = swapAux;
-        // numIteraciones++;
-        // }
-
     }
 
     printf("Tiempo en segundos %f\n", dwalltime() - timetick);
@@ -178,14 +162,7 @@ int funcionSlave(int tid, int N, int nrProcesos) {
     // Recibir el bloque
     MPI_Scatter(NULL, 0, MPI_DATA_T, &A[N], bloque, MPI_DATA_T, ROOT_P, MPI_COMM_WORLD);
 
-    #ifdef PRINT_MATRIZ
-    sleep(tid);
-    printf("Scatter Proces %d:\n",tid);
-    printMatriz(N-1,N,A);
-    sleep(3);
-    #endif
-
-    while (!convergeG ) {
+    while (!convergeG && numIteracion<10) {
         // Recibo B[0] en data0
         MPI_Bcast(&data0, 1, MPI_DATA_T, 0, MPI_COMM_WORLD);
 
@@ -213,27 +190,12 @@ int funcionSlave(int tid, int N, int nrProcesos) {
 			MPI_Wait(&request, &status);
         }
 
-        #ifdef PRINT_MATRIZ
-        printf("Proces %d postPasaje:\n",tid);
-        printMatriz(N-1,N,A);
-        sleep(3);
-        #endif
-
         
-        // calculo Promedio y convergencia
-        converge = porcesamientoSlave(A, B, N, (N/nrProcesos) - (tid==nrProcesos) , tid,data0,nrProcesos);
-
-        #ifdef DEBUG
-        printf("Proces%d termino procesamiento iteracion:%d\n",tid,numIteracion);
-        sleep(1);
-        #endif
+        //Calculo de Promedio y convergencia
+        converge = procesamientoSlave(A, B, N, (N/nrProcesos) - (tid==nrProcesos) , tid,data0,nrProcesos);
 
         // Chequeo convergencia global
   	    MPI_Allreduce(&converge, &convergeG, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
-
-        #ifdef CONVERGE  
-        printf("Hilo%d converge: %d conveergeG:%d iteracion:%d\n",tid,converge,convergeG,numIteracion);
-        #endif
 
         if(!convergeG){
             //swap
@@ -241,63 +203,28 @@ int funcionSlave(int tid, int N, int nrProcesos) {
             A = B;
             B= swapAux;
             numIteracion++;
-            printf("Hilo %d no deberia terminar iteracion: %d convergeG: %d\n",tid,numIteracion,convergeG);
-        }else{
-            printf("Hilo %d deberia termino",tid);
-            }
-            
-
+        }
+        #ifdef DEBUG
+        printf("Iteracion: %d. Matriz: \n",numIteracion);
+        printMatriz(N/nrProcesos+1,N,A);
+        #endif
     }
-
     free(A);
     free(B);
 }
 
 
-void printMatriz(int Ni,int Nj, DATA_T* M){
-    int i,j,f,c;
-    printf("\n");
-    for(int i=0;i<Ni;i++) {
-        for (int j= 0;j<Nj;j++){
-            printf("%.5f ",M[i*Nj+j]);
-        }
-            printf("\n");
-    }
-    printf("\n\n --------------------\n\n");
-    printf("\n\n\n");
-}
-
-DATA_T randFP(DATA_T min, DATA_T max) {
-  DATA_T range = (max - min);
-  DATA_T div = RAND_MAX / range;
-  return min + (rand() / div);
-}
-
 int procesamientoMaster(DATA_T *A, DATA_T *B, int N, int filasCalculo){
     int i,j,inj,converge;
 
     converge =1;
+
     //Cálculo fila 0 revisando convergencia: B[0,x]
-    #ifdef PROCE_MASTER
-    printf("MASTER comienzo a calcular el procesamiento\n");
-    sleep(1);
-    #endif
-
-
     for(j=1;j<N-1;j++){
         B[j]= (A[j] + A[j-1] + A [j+1] + A[N+j] + A[N+j-1] + A[N+j+1]) * (1.0/6);
 
-        #ifdef PROCE_MASTER
-        printf("Calculo B[0,%d]\n",j);
-        sleep(1);
-        #endif
-
         //Calculo convergencia
         if (fabs(B[0]-B[j])>precision){
-            #ifdef PROCE_MASTER
-            printf("Divergio el valor B[0,%d]\n",j);
-            sleep(1);
-            #endif
             converge= 0;
             j++;
             break;
@@ -306,48 +233,23 @@ int procesamientoMaster(DATA_T *A, DATA_T *B, int N, int filasCalculo){
     //Calculo el resto de la fila 0 si entré al if de la convergencia en alguna iteración
     for(;j<N-1;j++){
         B[j]= (A[j] + A[j-1] + A [j+1] + A[N+j] + A[N+j-1] + A[N+j+1]) * (1.0/6);
-        #ifdef PROCE_MASTER
-        printf("Calculo B[0,%d]\n",j);
-        sleep(1);
-        #endif
     }
     //Esquina derecha superior B[0,N-1]
     B[N-1] = (A[N-1] + A[N-2] + A[N+(N-1)] +  A[N+(N-2)]) * 0.25;
-
-    #ifdef PROCE_MASTER
-    printf("Calculo B[0,N-1]\n");
-    sleep(1);
-    #endif
-
     //Reviso convergencia esquina derecha superior
     if (converge && fabs(B[0]-B[N-1])>precision){
-            #ifdef PROCE_MASTER
-            printf("Divergio el valor B[0,%d]\n",j);
-            sleep(1);
-            #endif
             converge = 0;
     }
-    
-    #ifdef PROCE_MASTER
-    printf("Finalizo calculo fila0 \n");
-    sleep(1);
-    #endif
-
-    //------------------------
 
 
-    for(i= 1;converge && i< filasCalculo;i++) {
-        //Calculo primer elemento de la fila (calculo de todas las primeras columnas)
+    //--------El Resto de mis filas----------------
+    for(i=1;converge && i<filasCalculo;i++) {
+        //Calculo primer elemento de la fila (calculo todas las primeras columnas)
         //B[i,0] = ...
         B[i*N]=(  A[(i-1)*N] + A[(i-1)*N+1]     //2 elems de fila anterior
             + A[i*N] + A[i*N+1]             //2 elems de fila actual
             + A[(i+1)*N] + A[(i+1)*N+1]     //2 elems de fila siguiente
             ) * (1.0/6);                    //Divido por 6
-
-        #ifdef PROCE_MASTER
-        printf("Calculo B[%d,0]\n",i);
-        sleep(1);
-        #endif
 
         //Reviso su convergencia
         if (fabs(B[0]-B[i*N])>precision){
@@ -361,10 +263,6 @@ int procesamientoMaster(DATA_T *A, DATA_T *B, int N, int filasCalculo){
                     + A[inj-1]+ A[inj] + A[inj+1]           //3 elems de fila actual
                     + A[inj+N-1] +A[inj+N] +A[inj+N+1]      //3 elems de fila siguiente
                     ) * (1.0/9);                            //Divido por 9
-            #ifdef PROCE_MASTER
-            printf("Calculo B[%d,%d]\n",i,j);
-            sleep(1);
-            #endif
             if (converge && fabs(B[0]-B[inj])>precision){
                 converge = 0;
             }
@@ -375,10 +273,6 @@ int procesamientoMaster(DATA_T *A, DATA_T *B, int N, int filasCalculo){
                     + A[i*N-1+N-1] + A[i*N+N-1]         //2 elems de fila actual
                     + A[(i+1)*N-1+N-1] + A[(i+1)*N+N-1] //2 elems de fila siguiente
                     ) * (1.0/6.0);                      //Divido por 6
-        #ifdef PROCE_MASTER
-        printf("Calculo B[%d,%d]\n",i,N-1);
-        sleep(1);
-        #endif
         //Verifico convergencia
         if (converge && fabs(B[0]-B[i*N+N-1])>precision){
             converge = 0;
@@ -393,11 +287,6 @@ int procesamientoMaster(DATA_T *A, DATA_T *B, int N, int filasCalculo){
             + A[i*N] + A[i*N+1]             //2 elems de fila actual
             + A[(i+1)*N] + A[(i+1)*N+1]     //2 elems de fila siguiente
             )*(1.0/6);                      //Divido por 6
-
-        #ifdef PROCE_MASTER
-        printf("Calculo B[%d,0]\n",i);
-        sleep(1);
-        #endif
         //Calculo de la parte central de la fila
         //B[i,1] hasta B[i,N-2]
         for(j=1;j<N-1;j++){
@@ -405,10 +294,6 @@ int procesamientoMaster(DATA_T *A, DATA_T *B, int N, int filasCalculo){
                     + A[(i)*N+(j-1)]+ A[(i)*N+j] + A[(i)*N+j+1]             //3 elems de fila actual
                     + A[(i+1)*N+(j-1)] +A[(i+1)*N+j] +A[(i+1)*N+j+1]        //3 elems de fila siguiente
                     ) * (1.0/9);                                            //Divido por 9
-            #ifdef PROCE_MASTER
-            printf("Calculo B[%d,%d]\n",i,j);
-            sleep(1);
-            #endif
         }
         //Calculo último elemento de la fila (calculo todas las últimas columnas)
         //B[i,N-1]
@@ -416,29 +301,15 @@ int procesamientoMaster(DATA_T *A, DATA_T *B, int N, int filasCalculo){
                     +A[i*N-1+j] + A[i*N+j]          //2 elems de fila actual
                     +A[(i+1)*N-1+j] + A[(i+1)*N+j]  //2 elems de fila siguiente
                     )*(1.0/6);                      //Divido por 6
-        #ifdef PROCE_MASTER
-        printf("Calculo B[%d,%d]\n",i,j);
-        sleep(1);
-        #endif
     }
-
-    #ifdef PROCE_MASTER
-    printf("fin del calculoMaster\n");
-    sleep(1);
-    #endif
 
     return converge;
 }
 
-int porcesamientoSlave(DATA_T *A, DATA_T *B, int N, int filasCalculo, int tid,int data0,int nrProcesos){
+int procesamientoSlave(DATA_T *A, DATA_T *B, int N, int filasCalculo, int tid,int data0,int nrProcesos){
     int i,j,inj,converge;
 
     converge =1;
-
-    #ifdef PROCE_SLAVE
-    printf("Proces %d comienza procesamiento\n",tid);
-    sleep(1);
-    #endif
 
     for(i= 1;converge && i<filasCalculo;i++) {
         //Calculo primer elemento de la fila (calculo de todas las primeras columnas)
@@ -448,10 +319,6 @@ int porcesamientoSlave(DATA_T *A, DATA_T *B, int N, int filasCalculo, int tid,in
             + A[(i+1)*N] + A[(i+1)*N+1]     //2 elems de fila siguiente
             ) * (1.0/6);                    //Divido por 6
 
-        #ifdef PROCE_SLAVE
-        printf("calculo B[%d,0]\n",i);
-        sleep(1);
-        #endif
         //Reviso su convergencia
         if (fabs(data0-B[i*N])>precision){
             converge = 0;
@@ -464,10 +331,6 @@ int porcesamientoSlave(DATA_T *A, DATA_T *B, int N, int filasCalculo, int tid,in
                     + A[inj-1]+ A[inj] + A[inj+1]           //3 elems de fila actual
                     + A[inj+N-1] +A[inj+N] +A[inj+N+1]      //3 elems de fila siguiente
                     ) * (1.0/9);                            //Divido por 9
-            #ifdef PROCE_SLAVE
-            printf("calculo B[%d,%d]\n",i,j);
-            sleep(1);
-            #endif
             if (converge && fabs(data0-B[inj])>precision){
                 converge = 0;
             }
@@ -478,10 +341,6 @@ int porcesamientoSlave(DATA_T *A, DATA_T *B, int N, int filasCalculo, int tid,in
                     + A[i*N-1+N-1] + A[i*N+N-1]         //2 elems de fila actual
                     + A[(i+1)*N-1+N-1] + A[(i+1)*N+N-1] //2 elems de fila siguiente
                     ) * (1.0/6.0);                      //Divido por 6
-        #ifdef PROCE_SLAVE
-        printf("calculo B[%d,%d]\n",i,N-1);
-        sleep(1);
-        #endif
         //Verifico convergencia
         if (converge && fabs(data0-B[i*N+N-1])>precision){
             converge = 0;
@@ -496,10 +355,6 @@ int porcesamientoSlave(DATA_T *A, DATA_T *B, int N, int filasCalculo, int tid,in
             + A[i*N] + A[i*N+1]             //2 elems de fila actual
             + A[(i+1)*N] + A[(i+1)*N+1]     //2 elems de fila siguiente
             )*(1.0/6);                      //Divido por 6
-        #ifdef PROCE_SLAVE
-        printf("calculo B[%d,0]\n",i);
-        sleep(1);
-        #endif
         //Calculo de la parte central de la fila
         //B[i,1] hasta B[i,N-2]
         for(j=1;j<N-1;j++){
@@ -507,10 +362,6 @@ int porcesamientoSlave(DATA_T *A, DATA_T *B, int N, int filasCalculo, int tid,in
                     + A[(i)*N+(j-1)]+ A[(i)*N+j] + A[(i)*N+j+1]             //3 elems de fila actual
                     + A[(i+1)*N+(j-1)] +A[(i+1)*N+j] +A[(i+1)*N+j+1]        //3 elems de fila siguiente
                     ) * (1.0/9);                                            //Divido por 9
-            #ifdef PROCE_SLAVE
-            printf("calculo B[%d,%d]\n",i,j);
-            sleep(1);
-            #endif
         }
         //Calculo último elemento de la fila (calculo todas las últimas columnas)
         //B[i,N-1]
@@ -518,10 +369,6 @@ int porcesamientoSlave(DATA_T *A, DATA_T *B, int N, int filasCalculo, int tid,in
                     +A[i*N-1+j] + A[i*N+j]          //2 elems de fila actual
                     +A[(i+1)*N-1+j] + A[(i+1)*N+j]  //2 elems de fila siguiente
                     )*(1.0/6);                      //Divido por 6
-        #ifdef PROCE_SLAVE
-        printf("calculo B[%d,%d]\n",i,N-1);
-        sleep(1);
-        #endif
     }
 
         
@@ -531,10 +378,6 @@ int porcesamientoSlave(DATA_T *A, DATA_T *B, int N, int filasCalculo, int tid,in
             B[(N-1)*N] = (A[(N-2)*N] +  A[(N-2)*N+1] 
                     + A[(N-1)*N] + A[(N-1)*N+1]
                     ) * 0.25;
-            #ifdef PROCE_SLAVE
-            printf("calculo B[%d,%d]\n",N-1,0);
-            sleep(1);
-            #endif
             //Verifico convergencia
             if (converge && fabs(data0-B[(N-1)*N])>precision){
                 converge = 0;
@@ -547,10 +390,6 @@ int porcesamientoSlave(DATA_T *A, DATA_T *B, int N, int filasCalculo, int tid,in
                 B[inj] = ( A[inj-1] + A[inj] + A[inj+1]         //3 elems de fila actual
                      + A[inj-1-N] + A[inj-N] + A[inj+1-N]       //3 elems de fila anterior
                      ) * (1.0/6);                               //divido por 6
-                #ifdef PROCE_SLAVE
-                printf("calculo B[%d,%d]\n",i,j);
-                sleep(1);
-                #endif
                 //Calculo convergencia
                 if (fabs(data0-B[inj])>precision){
                     converge = 0;
@@ -564,18 +403,10 @@ int porcesamientoSlave(DATA_T *A, DATA_T *B, int N, int filasCalculo, int tid,in
                 B[inj] = ( A[inj-1] + A[inj] + A[inj+1]         //3 elems de fila actual
                      + A[inj-1-N] + A[inj-N] + A[inj+1-N]       //3 elems de fila anterior
                      ) * (1.0/6);
-                #ifdef PROCE_SLAVE
-                printf("calculo B[%d,%d]\n",i,j);
-                sleep(1);
-                #endif
             }
             //Ultimo elemento: Esquina derecha inferior, B[N-1,N-1]
             //j=N-1
             B[N*N-1] = (A[N*N-2] + A[N*N-1] + A[N*j-2] + A[N*j-1])*0.25;
-            #ifdef PROCE_SLAVE
-            printf("calculo B[%d,%d]\n",N-1,N-1);
-            sleep(1);
-            #endif
             //Verifico convergencia de ultimo elemento
             if (converge && fabs(data0-B[N*N-1])>precision){
                 converge = 0;
@@ -583,4 +414,23 @@ int porcesamientoSlave(DATA_T *A, DATA_T *B, int N, int filasCalculo, int tid,in
         }
 
     return converge;
+}
+
+
+void printMatriz(int Ni,int Nj, DATA_T* M){
+    int i,j,f,c;
+    printf("\n");
+    for(int i=0;i<Ni;i++) {
+        for (int j= 0;j<Nj;j++){
+            printf("%.7f ",M[i*Nj+j]);
+        }
+            printf("\n");
+    }
+    printf("\n");
+}
+
+DATA_T randFP(DATA_T min, DATA_T max) {
+  DATA_T range = (max - min);
+  DATA_T div = RAND_MAX / range;
+  return min + (rand() / div);
 }

@@ -1,0 +1,66 @@
+-v
+-v
+-v
+-v
+Vector = [0.84018772, 0.39438293, 0.78309922, 0.79844003, 0.91164736, 0.19755137, 0.33522276, 0.76822959, 0.27777471, 0.55396996, 0.47739705, 0.62887092, 0.36478447, 0.51340091, 0.95222973, 0.91619507, 0.63571173, 0.71729693, 0.14160256, 0.60696888, 0.01630057, 0.24288677, 0.13723158, 0.80417675, 0.15667909, 0.40094439, 0.12979045, 0.10880880, 0.99892452, 0.21825691, 0.51293239, 0.83911223, ]
+Proceso: 3 - Envia: B+1=0x56438f5d05b8 - val0: 0.50118 - A=0x56438f5df1f0 - tamBloque=8
+P: 3 hace Free de 0x56438f5df1f0 y 0x56438f5d05b0
+Proceso: 1 - Envia: B+1=0x560f1081b5e8 - val0: 0.50834 - A=0x560f1082a220 - tamBloque=8
+P: 1 hace Free de 0x560f1082a220 y 0x560f1081b5e0
+Proceso: 2 - Envia: B+1=0x55c0223b15e8 - val0: 0.50468 - A=0x55c0223c0220 - tamBloque=8
+P: 2 hace Free de 0x55c0223c0220 y 0x55c0223b15e0
+Proceso: 0 - Envia: B+1=0x5645b5f0b208 - val0: 0.50988 - A=0x5645b5f0ab80 - tamBloque=8
+Iteraciones: 932
+Tiempo en segundos: 0.001604
+Resultado: 
+Vector = [0.50988491, 0.50980179, 0.50966977, 0.50949018, 0.50926481, 0.50899594, 0.50868626, 0.50836180, 0.50833888, 0.50795730, 0.50754534, 0.50710715, 0.50664712, 0.50616988, 0.50568021, 0.50518305, 0.50468338, 0.50418622, 0.50369656, 0.50321933, 0.50275931, 0.50232112, 0.50190918, 0.50152761, 0.50118024, 0.50087058, 0.50060171, 0.50037636, 0.50019677, 0.50006476, 0.49998164, 0.49994826, ]
+P: 0 hace Free de 0x5645b5f0ab80 y 0x5645b5f0b200
+munmap_chunk(): invalid pointer
+[ARJ2MS8C3:36577] *** Process received signal ***
+[ARJ2MS8C3:36577] Signal: Aborted (6)
+[ARJ2MS8C3:36577] Signal code:  (-6)
+munmap_chunk(): invalid pointer
+[ARJ2MS8C3:36578] *** Process received signal ***
+[ARJ2MS8C3:36578] Signal: Aborted (6)
+[ARJ2MS8C3:36578] Signal code:  (-6)
+[ARJ2MS8C3:36577] [ 0] [ARJ2MS8C3:36578] [ 0] /lib/x86_64-linux-gnu/libc.so.6(+0x43090)[0x7f7a210b8090]
+[ARJ2MS8C3:36577] [ 1] /lib/x86_64-linux-gnu/libc.so.6(+0x43090)[0x7f6b47952090]
+[ARJ2MS8C3:36578] [ 1] /lib/x86_64-linux-gnu/libc.so.6(gsignal+0xcb)[0x7f7a210b800b]
+[ARJ2MS8C3:36577] [ 2] /lib/x86_64-linux-gnu/libc.so.6(gsignal+0xcb)[0x7f6b4795200b]
+[ARJ2MS8C3:36578] [ 2] /lib/x86_64-linux-gnu/libc.so.6(abort+0x12b)[0x7f6b47931859]
+/lib/x86_64-linux-gnu/libc.so.6(abort+0x12b)[0x7f7a21097859]
+[ARJ2MS8C3:36577] [ 3] [ARJ2MS8C3:36578] [ 3] /lib/x86_64-linux-gnu/libc.so.6(+0x8d26e)[0x7f7a2110226e]
+[ARJ2MS8C3:36577] [ 4] /lib/x86_64-linux-gnu/libc.so.6(+0x8d26e)[0x7f6b4799c26e]
+[ARJ2MS8C3:36578] [ 4] /lib/x86_64-linux-gnu/libc.so.6(+0x952fc)[0x7f7a2110a2fc]
+[ARJ2MS8C3:36577] [ 5] /lib/x86_64-linux-gnu/libc.so.6(+0x952fc)[0x7f6b479a42fc]
+[ARJ2MS8C3:36578] [ 5] /lib/x86_64-linux-gnu/libc.so.6(+0x9554c)[0x7f7a2110a54c]
+[ARJ2MS8C3:36577] [ 6] /lib/x86_64-linux-gnu/libc.so.6(+0x9554c)[0x7f6b479a454c]
+[ARJ2MS8C3:36578] [ 6] /home/FedericoAdra/opt/openmpi/lib/libmpi.so.40(ompi_coll_base_topo_destroy_tree+0x1a)[0x7f7a2132cbaa]
+[ARJ2MS8C3:36577] [ 7] /home/FedericoAdra/opt/openmpi/lib/libmpi.so.40(ompi_coll_base_topo_destroy_tree+0x1a)[0x7f6b47bc6baa]
+[ARJ2MS8C3:36578] [ 7] /home/FedericoAdra/opt/openmpi/lib/libmpi.so.40(+0xa9b07)[0x7f7a21329b07]
+[ARJ2MS8C3:36577] [ 8] /home/FedericoAdra/opt/openmpi/lib/libmpi.so.40(+0xa9bc9)[0x7f7a21329bc9]
+[ARJ2MS8C3:36577] [ 9] /home/FedericoAdra/opt/openmpi/lib/libmpi.so.40(+0xa9b07)[0x7f6b47bc3b07]
+[ARJ2MS8C3:36578] [ 8] /home/FedericoAdra/opt/openmpi/lib/libmpi.so.40(mca_coll_base_comm_unselect+0x1f01)[0x7f7a21327511]
+[ARJ2MS8C3:36577] [10] /home/FedericoAdra/opt/openmpi/lib/libmpi.so.40(+0xa9bc9)[0x7f6b47bc3bc9]
+[ARJ2MS8C3:36578] [ 9] /home/FedericoAdra/opt/openmpi/lib/libmpi.so.40(+0x2f890)[0x7f7a212af890]
+[ARJ2MS8C3:36577] [11] /home/FedericoAdra/opt/openmpi/lib/libmpi.so.40(ompi_comm_finalize+0xf1)[0x7f7a212b0a91]
+[ARJ2MS8C3:36577] [12] /home/FedericoAdra/opt/openmpi/lib/libmpi.so.40(mca_coll_base_comm_unselect+0x1f01)[0x7f6b47bc1511]
+[ARJ2MS8C3:36578] [10] /home/FedericoAdra/opt/openmpi/lib/libmpi.so.40(ompi_mpi_finalize+0x56d)[0x7f7a212d4f3d]
+[ARJ2MS8C3:36577] [13] out/vector.o(+0x149b)[0x560f0fb4e49b]
+[ARJ2MS8C3:36577] [14] /lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0xf3)[0x7f7a21099083]
+[ARJ2MS8C3:36577] [15] /home/FedericoAdra/opt/openmpi/lib/libmpi.so.40(+0x2f890)[0x7f6b47b49890]
+[ARJ2MS8C3:36578] [11] /home/FedericoAdra/opt/openmpi/lib/libmpi.so.40(ompi_comm_finalize+0xf1)[0x7f6b47b4aa91]
+[ARJ2MS8C3:36578] [12] /home/FedericoAdra/opt/openmpi/lib/libmpi.so.40(ompi_mpi_finalize+0x56d)[0x7f6b47b6ef3d]
+[ARJ2MS8C3:36578] [13] out/vector.o(+0x149b)[0x55c02172c49b]
+[ARJ2MS8C3:36578] [14] out/vector.o(+0x12ce)[0x560f0fb4e2ce]
+[ARJ2MS8C3:36577] *** End of error message ***
+/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0xf3)[0x7f6b47933083]
+[ARJ2MS8C3:36578] [15] out/vector.o(+0x12ce)[0x55c02172c2ce]
+[ARJ2MS8C3:36578] *** End of error message ***
+--------------------------------------------------------------------------
+Primary job  terminated normally, but 1 process returned
+a non-zero exit code. Per user-direction, the job has been aborted.
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+mpirun noticed that process rank 1 with PID 0 on node ARJ2MS8C3 exited on signal 6 (Aborted).
+--------------------------------------------------------------------------

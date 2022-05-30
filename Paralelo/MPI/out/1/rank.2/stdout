@@ -1,0 +1,3 @@
+Proceso: 2 - Envia: B+1=0x56128d4f3638 - val0: 0.50468 - A=0x56128d4f35e0 - tamBloque=8
+P: 2 hace Free de 0x56128d4f35e0 y 0x56128d4f3630
+Punteros: A=0x56128d4f35e0,B=0x56128d4f3630,swapaux=0x56128d4f3630,tamBloque=0x7ffce15cddfc,data0=0x7ffce15cde18,converge=0x7ffce15cde00,Vector = [0.50468338, 0.50418622, 0.50369656, 0.50321933, 0.50275931, 0.50232112, 0.50190918, 0.50152761, ]

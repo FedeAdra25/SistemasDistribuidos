@@ -1,0 +1,15 @@
+munmap_chunk(): invalid pointer
+[ARJ2MS8C3:60892] *** Process received signal ***
+[ARJ2MS8C3:60892] Signal: Aborted (6)
+[ARJ2MS8C3:60892] Signal code:  (-6)
+[ARJ2MS8C3:60892] [ 0] /lib/x86_64-linux-gnu/libc.so.6(+0x43090)[0x7f1f9bd5f090]
+[ARJ2MS8C3:60892] [ 1] /lib/x86_64-linux-gnu/libc.so.6(gsignal+0xcb)[0x7f1f9bd5f00b]
+[ARJ2MS8C3:60892] [ 2] /lib/x86_64-linux-gnu/libc.so.6(abort+0x12b)[0x7f1f9bd3e859]
+[ARJ2MS8C3:60892] [ 3] /lib/x86_64-linux-gnu/libc.so.6(+0x8d26e)[0x7f1f9bda926e]
+[ARJ2MS8C3:60892] [ 4] /lib/x86_64-linux-gnu/libc.so.6(+0x952fc)[0x7f1f9bdb12fc]
+[ARJ2MS8C3:60892] [ 5] /lib/x86_64-linux-gnu/libc.so.6(+0x9554c)[0x7f1f9bdb154c]
+[ARJ2MS8C3:60892] [ 6] out/vector.o(+0x1f44)[0x5558b3505f44]
+[ARJ2MS8C3:60892] [ 7] out/vector.o(+0x14a3)[0x5558b35054a3]
+[ARJ2MS8C3:60892] [ 8] /lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0xf3)[0x7f1f9bd40083]
+[ARJ2MS8C3:60892] [ 9] out/vector.o(+0x12ce)[0x5558b35052ce]
+[ARJ2MS8C3:60892] *** End of error message ***

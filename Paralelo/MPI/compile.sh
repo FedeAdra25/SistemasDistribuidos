@@ -8,7 +8,11 @@ echo "El script está en: $SCRIPT_DIR"
 echo "Todos los argumentos = $@"
 cd $SCRIPT_DIR
 
-mpicc $debug -o vector.o vecPasoEsquinas.c
+mpicc $debug -o out/vector2.o vecPasoEsquinas.c
+mpicc $debug -o out/vector.o vector_triple.c
+
+#comando que estoy usando ahora mismo
+mpirun -v -output-filename out/ -np 4 out/vector.o 32 > out/result.txt 
 
 mpicc $debug -o matriz.o matriz.c
 

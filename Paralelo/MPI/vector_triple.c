@@ -21,6 +21,7 @@ void printVector(int N, DATA_T* M);
 DATA_T randFP(DATA_T min, DATA_T max);
 
 void funcionSlave(int, int, int);
+void funcionSlaveLast(int N, int P);
 void funcionDelMaster(int N, int P);
 
 int main(int argc, char** argv) {
@@ -50,8 +51,11 @@ int main(int argc, char** argv) {
 
   if (miID == 0) {
     funcionDelMaster(N, nrProcesos);
-  } else {
+  } else if(miID!=nrProcesos-1) {
     funcionSlave(miID, N, nrProcesos);
+  }
+  else{
+    funcionSlaveLast(N,nrProcesos);
   }
 
   MPI_Finalize();  // Finaliza el ambiente MPI. No debe haber sentencias después
@@ -91,7 +95,7 @@ void funcionDelMaster(int N, int nrProcesos) {
               A, tamBloque, MPI_DATA_T, //Pointer to data received, length, type
               ROOT_PID, MPI_COMM_WORLD);
 
-  while (!convergeG) {
+  while (!convergeG && numIteraciones < 2000) {
     B[0] = (A[0] + A[1]) * 0.5;
     //Envio el dato B[0] para chequear convergencia
     //Broadcast(FROM,SIZE,TYPE,ROOT,COMM)
@@ -119,7 +123,6 @@ void funcionDelMaster(int N, int nrProcesos) {
     for (; i < tamBloque; i++) {
       B[i] = (A[i - 1] + A[i] + A[i + 1]) * (1.0 / 3);
     }
-
     // Chequeo convergencia global
     MPI_Allreduce(&converge, &convergeG, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
     if (!convergeG) {
@@ -128,6 +131,7 @@ void funcionDelMaster(int N, int nrProcesos) {
       B = swapAux;
       numIteraciones++;
     }
+    
   }
 
 
@@ -158,12 +162,12 @@ void funcionDelMaster(int N, int nrProcesos) {
 void funcionSlave(int tid, int N, int nrProcesos) {
   DATA_T *A, *B, *swapAux;
   int tamBloque = N / nrProcesos;
-  int converge, i, convergeG = 0;
+  int converge, i, convergeG = 0,numIteraciones=0;
   DATA_T data0;
 
   // Aloca memoria para los vectores
-  A = (DATA_T*)malloc(sizeof(DATA_T) * tamBloque + 2 - (tid == nrProcesos - 1));
-  B = (DATA_T*)malloc(sizeof(DATA_T) * tamBloque + 2 - (tid == nrProcesos - 1));
+  A = (DATA_T*)malloc(sizeof(DATA_T) * tamBloque + 2);
+  B = (DATA_T*)malloc(sizeof(DATA_T) * tamBloque + 2);
 
   
   //Datos para send y receive
@@ -171,40 +175,28 @@ void funcionSlave(int tid, int N, int nrProcesos) {
   MPI_Status status;
 
   // Recibir el bloque
-  MPI_Scatter(&A[1], 0, MPI_DATA_T,         //Pointer to data, length, type
+  MPI_Scatter(&swapAux, 0, MPI_DATA_T,         //Pointer to data, length, type
               &A[1], tamBloque, MPI_DATA_T, //Pointer to data received, length, type
               ROOT_PID, MPI_COMM_WORLD);
-  while (!convergeG) {
+  while (!convergeG && numIteraciones < 2000) {
     // Recibo B[0] en data0
     MPI_Bcast(&data0, 1, MPI_DATA_T, 0, MPI_COMM_WORLD);
 
-    //Si no soy el último proceso
-    if (tid != nrProcesos - 1) {
-      //Envio mis valores a los vecinos
-      MPI_Isend(&A[1], 1, MPI_DATA_T, tid - 1, 1, MPI_COMM_WORLD, &request);
-      MPI_Isend(&A[tamBloque], 1, MPI_DATA_T, tid + 1, 1, MPI_COMM_WORLD,&request);
+    //Envio mis valores a los vecinos
+    MPI_Isend(&A[1], 1, MPI_DATA_T, tid - 1, 1, MPI_COMM_WORLD, &request);
+    MPI_Isend(&A[tamBloque], 1, MPI_DATA_T, tid + 1, 1, MPI_COMM_WORLD,&request);
 
-      //Recibo el valor del vecino izquierdo
-      MPI_Irecv(A, 1, MPI_DATA_T, tid - 1, 1, MPI_COMM_WORLD, &request);
-      MPI_Wait(&request, &status);
+    //Recibo el valor del vecino izquierdo
+    MPI_Irecv(A, 1, MPI_DATA_T, tid - 1, 1, MPI_COMM_WORLD, &request);
+    MPI_Wait(&request, &status);
 
-      //Recibo el valor del vecino derecho
-      MPI_Irecv(&A[tamBloque + 1], 1, MPI_DATA_T, tid + 1, 1, MPI_COMM_WORLD,&request);
-      MPI_Wait(&request, &status);
-
-    }
-    //Si soy el ultimo
-    else {
-      //Envio valor vecino izquierdo
-      MPI_Isend(&A[1], 1, MPI_DATA_T, tid - 1, 1, MPI_COMM_WORLD, &request);
-      //Recibo el valor del vecino izquierdo
-      MPI_Irecv(A, 1, MPI_DATA_T, tid - 1, 1, MPI_COMM_WORLD, &request);
-      MPI_Wait(&request, &status);
-    }
+    //Recibo el valor del vecino derecho
+    MPI_Irecv(A+tamBloque/*SI PONES +1 ACA EXPLOTA*/, 1, MPI_DATA_T, tid + 1, 1, MPI_COMM_WORLD,&request);
+    MPI_Wait(&request, &status);
     converge = 1;
 
     //Calculo promedio y convergencia
-    for (i = 1; i < tamBloque + 1 - (tid == nrProcesos - 1); i++) {
+    for (i = 1; i < tamBloque + 1; i++) {
       B[i] = (A[i - 1] + A[i] + A[i + 1]) * (1.0 / 3);
       if (fabs(data0 - B[i]) > precision) {
         converge = 0;
@@ -213,17 +205,10 @@ void funcionSlave(int tid, int N, int nrProcesos) {
       }
     }
     //Calculo el promedio de los numeros que me faltaron
-    for (; i < tamBloque + 1 - (tid == nrProcesos - 1); i++) {
+    for (; i < tamBloque + 1; i++) {
       B[i] = (A[i - 1] + A[i] + A[i + 1]) * (1.0 / 3);
     }
-    
-    //Calculo de ultimo elemento si soy el ultimo proceso
-    if (tid == nrProcesos - 1) {
-      B[tamBloque] = (A[tamBloque - 1] + A[tamBloque]) * 0.5;
-      if (converge && fabs(data0 - B[i]) > precision) {
-        converge = 0;
-      }
-    }
+
     // Chequeo de convergencia global
     MPI_Allreduce(&converge, &convergeG, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
 
@@ -231,6 +216,7 @@ void funcionSlave(int tid, int N, int nrProcesos) {
       swapAux = A;
       A = B;
       B = swapAux;
+      numIteraciones++;
     }
   }
   #ifdef DEBUG
@@ -245,7 +231,80 @@ void funcionSlave(int tid, int N, int nrProcesos) {
   printVector(tamBloque,B+1);
   #endif
 
-  sleep(2);
+  free(A);
+  free(B);
+}
+
+void funcionSlaveLast(int N, int nrProcesos) {
+  DATA_T *A, *B, *swapAux;
+  int tamBloque = N / nrProcesos;
+  int converge, i, convergeG = 0,numIteraciones=0;
+  DATA_T data0;
+
+  // Aloca memoria para los vectores
+  A = (DATA_T*)malloc(sizeof(DATA_T) * tamBloque + 1);
+  B = (DATA_T*)malloc(sizeof(DATA_T) * tamBloque + 1);
+
+  
+  //Datos para send y receive
+  MPI_Request request;
+  MPI_Status status;
+
+  // Recibir el bloque
+  MPI_Scatter(&A[1], 0, MPI_DATA_T,         //Pointer to data, length, type
+              &A[1], tamBloque, MPI_DATA_T, //Pointer to data received, length, type
+              ROOT_PID, MPI_COMM_WORLD);
+  while (!convergeG && numIteraciones < 2000) {
+    // Recibo B[0] en data0
+    MPI_Bcast(&data0, 1, MPI_DATA_T, 0, MPI_COMM_WORLD);
+
+    //Envio valor vecino izquierdo
+    MPI_Isend(&A[1], 1, MPI_DATA_T, nrProcesos-2, 1, MPI_COMM_WORLD, &request);
+    //Recibo el valor del vecino izquierdo
+    MPI_Irecv(A, 1, MPI_DATA_T, nrProcesos-2, 1, MPI_COMM_WORLD, &request);
+    MPI_Wait(&request, &status);
+    converge = 1;
+
+    //Calculo promedio y convergencia
+    for (i = 1; i < tamBloque; i++) {
+      B[i] = (A[i - 1] + A[i] + A[i + 1]) * (1.0 / 3);
+      if (fabs(data0 - B[i]) > precision) {
+        converge = 0;
+        i++;
+        break;
+      }
+    }
+    //Calculo el promedio de los numeros que me faltaron
+    for (; i < tamBloque; i++) {
+      B[i] = (A[i - 1] + A[i] + A[i + 1]) * (1.0 / 3);
+    }
+    
+    B[tamBloque] = (A[tamBloque - 1] + A[tamBloque]) * 0.5;
+    if (converge && fabs(data0 - B[i]) > precision) {
+      converge = 0;
+    }
+    // Chequeo de convergencia global
+    MPI_Allreduce(&converge, &convergeG, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
+
+    if (!convergeG) {
+      swapAux = A;
+      A = B;
+      B = swapAux;
+      numIteraciones++;
+    }
+  }
+  #ifdef DEBUG
+  printf("Proceso: %d - Envia: B+1=%p - val0: %.5f - A=%p - tamBloque=%d\n",nrProcesos-1,B+1,B[1],A,tamBloque);
+  #endif
+
+  //Si convergeG=1, no hice el swap, envio datos finales
+  MPI_Gather(B+1,tamBloque,MPI_DATA_T,A,0,MPI_DATA_T,ROOT_PID,MPI_COMM_WORLD);
+
+  #ifdef DEBUG
+  printf("P: %d hace Free de %p y %p\nPunteros: A=%p,B=%p,swapaux=%p,tamBloque=%p,data0=%p,converge=%p,",nrProcesos-1,A,B,A,B,swapAux,&tamBloque,&data0,&converge);
+  printVector(tamBloque,B+1);
+  #endif
+
   free(A);
   free(B);
 }

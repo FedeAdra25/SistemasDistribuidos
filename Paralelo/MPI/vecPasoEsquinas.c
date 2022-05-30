@@ -65,7 +65,7 @@ void funcionDelMaster(int N, int nrProcesos) {
 	DATA_T *A, *B, *swapAux;
 	int bloque = N / nrProcesos;
 	int converge, numIteraciones = 0;
-	int convergeG = 0;
+	int convergeG = 0,i;
 	double timetick;
 
     #ifdef PRUEBA
@@ -99,7 +99,7 @@ void funcionDelMaster(int N, int nrProcesos) {
     sleep(3);
     #endif
 
-  while (!convergeG) 
+  while (!convergeG)
   {
     B[0] = (A[0]+A[1]) * 0.5;
     //envio el dato para chequear convergencia
@@ -128,7 +128,6 @@ void funcionDelMaster(int N, int nrProcesos) {
     #endif
 
   	// Procesamiento
-    int i;
     converge = 1;
 	for(i=1;i<bloque;i++){
         B[i] = (A[i-1] + A[i] + A[i+1]) * (1.0/3); 
@@ -137,7 +136,7 @@ void funcionDelMaster(int N, int nrProcesos) {
         #endif
         if (fabs(B[0]-B[i]) > precision){
             
-            printf("Master ERROR CONVERGENCIA pos %d B[%d]= %f, B[%d]=%f \n",i,0,B[0],i,B[i]);
+            //printf("Master ERROR CONVERGENCIA pos %d B[%d]= %f, B[%d]=%f \n",i,0,B[0],i,B[i]);
             converge = 0;
             i++;
             break;
@@ -179,13 +178,13 @@ void funcionDelMaster(int N, int nrProcesos) {
 
 
   }
-    printf("Iteraciones: %d\n", numIteraciones);
+    printf("Iteraciones: %d \n", numIteraciones);
 
     printf("Tiempo en segundos: %f\n", dwalltime() - timetick);
 
     free(A);
     free(B);
-    
+
 }
 
 void funcionSlave(int tid, int N, int nrProcesos) {
@@ -266,7 +265,7 @@ void funcionSlave(int tid, int N, int nrProcesos) {
         for(i=1;i<bloque+1 - (tid == nrProcesos-1) ;i++){
 			B[i] = (A[i-1] + A[i] + A[i+1]) * (1.0/3); 
 			if (fabs(data0-B[i]) > precision){
-                printf("Hilo%d ERROR CONVERGENCIA pos %d data0= %f, B[%d]=%f\n",tid,i,data0,i,B[i]);
+                //printf("Hilo%d ERROR CONVERGENCIA pos %d data0= %f, B[%d]=%f\n",tid,i,data0,i,B[i]);
 				converge = 0;
 				i++;
 				break;
@@ -298,9 +297,9 @@ void funcionSlave(int tid, int N, int nrProcesos) {
         printf("\n ");
         #endif
 
-        // Chequeo de convergencia global
-        MPI_Allreduce(&converge, &convergeG, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
-
+        // Chequeo convergencia global
+  	    MPI_Allreduce(&converge, &convergeG, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
+        
         #ifdef PRINT_VEC
         if (tid == 1)
             printf("\n\n -------------------------- \n ");
@@ -309,7 +308,7 @@ void funcionSlave(int tid, int N, int nrProcesos) {
         #endif
 
         #ifdef CONVERGE
-        printf("Hilo%d converge: %d convergeG: %d",tid,converge,convergeG);
+        printf("Hilo%d converge: %d convergeG: %d iteracion: %d",tid,converge,convergeG,numIteracion);
         #endif
 
         #ifdef PRUEBA        
@@ -323,10 +322,12 @@ void funcionSlave(int tid, int N, int nrProcesos) {
             A = B;
             B= swapAux;
             numIteracion++;
-        }
+            printf("Hilo %d no deberia terminar iteracion: %d convergeG: %d\n",tid,numIteracion,convergeG);
+        }else
+            printf("Hilo %d deberia termino",tid);
 
 	}
-
+    printf("Hilo %d termino",tid);
     free(A);
     free(B);
 }

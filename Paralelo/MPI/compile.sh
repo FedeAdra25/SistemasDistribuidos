@@ -12,9 +12,9 @@ mpicc $debug -o out/vector2.o vecPasoEsquinas.c
 mpicc $debug -o out/vector.o vector_triple.c
 
 #comando que estoy usando ahora mismo
-#mpirun -v -output-filename out/ -np 4 out/vector.o 32 > out/result.txt 
+#mpirun -v -output-filename out/ -np 4 out/vector.o 32
 
-# mpicc $debug -o out/matriz.o matriz_fede.c
-mpicc $debug -o matriz.o matriz.c
-mpirun -v -output-filename out/ -np 2 matriz.o 8 > out/result.txt 
+mpicc $debug -o out/matriz.o matriz_fede.c
+#mpicc $debug -o out/matriz.o matriz.c
+mpirun -v -output-filename out/ -np 4 out/matriz.o 16
 #mpirun -np 2 vector.o 16

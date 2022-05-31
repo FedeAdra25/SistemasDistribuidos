@@ -46,7 +46,8 @@ int main(int argc, char** argv) {
             A[f+j] = randFP(0.0,1.0);
         }
 	}
-    #ifdef PRINT_MATRIZ
+    #ifdef DEBUG_POR_ITERACION
+    printf("Matriz inicial: \n");
     printMatriz(N,A);
     #endif
 
@@ -211,10 +212,8 @@ int main(int argc, char** argv) {
         }
 
         #ifdef DEBUG_POR_ITERACION
-        if(numIteracion > 230){
-            printf("MATRIZ A ITERACION: %d\n", numIteracion);
-            printMatriz(N,A);
-        }
+        printf("MATRIZ A ITERACION: %d\n", numIteracion);
+        printMatriz(N,A);
         #endif
 	}
 

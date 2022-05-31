@@ -1,0 +1,3 @@
+Vector 16
+Tiempo en segundos 0.000004, con 64 iteraciones 
+-------------------

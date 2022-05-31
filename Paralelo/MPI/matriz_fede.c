@@ -62,6 +62,8 @@ int main(int argc, char **argv)
 
     N = atoi(argv[1]);
 
+    printf("Proceso %d iniciando con tamBloque=%d\n",miID,(N*N)/nrProcesos);
+
     if (miID == ROOT_P)
     {
         funcionDelMaster(N, nrProcesos);
@@ -70,6 +72,7 @@ int main(int argc, char **argv)
     {
         funcionSlave(miID, N, nrProcesos);
     }
+    printf("Proceso %d finaliza con tamBloque=%d\n",miID,(N*N)/nrProcesos);
 
     // printf("Tiempo en segundos %f\n", dwalltime() - timetick);
     MPI_Finalize(); // Finaliza el ambiente MPI. No debe haber sentencias después
@@ -80,7 +83,7 @@ int main(int argc, char **argv)
 int funcionDelMaster(int N, int nrProcesos)
 {
     DATA_T *A, *B, *swapAux,*original;
-	int bloque = (N * N) / nrProcesos;
+	int tamBloque = (N * N) / nrProcesos;
 	int converge, i,inj,numIteraciones = 0;
 	int convergeG = 0;
 	double timetick;
@@ -88,7 +91,7 @@ int funcionDelMaster(int N, int nrProcesos)
     // Aloca memoria para los vectores
 	A = (DATA_T *) malloc(sizeof(DATA_T) * N * N);
     original=A;
-	B = (DATA_T *) malloc(sizeof(DATA_T) * (bloque + N) );
+	B = (DATA_T *) malloc(sizeof(DATA_T) * (tamBloque + N) );
 
     // Inicializacion de la matriz
 	int j,f;
@@ -101,7 +104,7 @@ int funcionDelMaster(int N, int nrProcesos)
     
     timetick = dwalltime();
     // Enviar los bloques a cada proceso
-    MPI_Scatter(A, bloque, MPI_DATA_T, A, bloque, MPI_DATA_T, ROOT_P, MPI_COMM_WORLD);
+    MPI_Scatter(A, tamBloque, MPI_DATA_T, A, tamBloque, MPI_DATA_T, ROOT_P, MPI_COMM_WORLD);
 
     #ifdef DEBUG
     printf("Matriz inicial: \n");
@@ -110,20 +113,18 @@ int funcionDelMaster(int N, int nrProcesos)
 
     while(!convergeG && numIteraciones<10){
         B[0] = (A[0] + A[1] + A[N] + A[N+1]) * 0.25; //Esquina izquierda superior B[0,0]
-        printf("%.7f=%.7f+%.7f+%.7f+%.7f\n",B[0],A[0],A[1],A[N],A[N+1]);
         
         //Envio el dato para chequear convergencia
    	    MPI_Bcast(B, 1, MPI_DATA_T, ROOT_P, MPI_COMM_WORLD);
-        printf("%.7f=%.7f+%.7f+%.7f+%.7f\n",B[0],A[0],A[1],A[N],A[N+1]);
         MPI_Request request;
 	    MPI_Status status;
 
         //Envio valor a vecino derecho
-        MPI_Isend(&A[bloque-N], N, MPI_DATA_T, 1, 1, MPI_COMM_WORLD, &request);
+        MPI_Isend(&A[tamBloque-N], N, MPI_DATA_T, 1, 1, MPI_COMM_WORLD, &request);
         //Recibo el valor del vecino derecho
-        MPI_Irecv(&A[bloque], N, MPI_DATA_T, 1, 1, MPI_COMM_WORLD, &request);
+        MPI_Irecv(&A[tamBloque], N, MPI_DATA_T, 1, 1, MPI_COMM_WORLD, &request);
         MPI_Wait(&request, &status);
-
+        
 
         //procesamiento
         converge = procesamientoMaster(A,B,N,N/nrProcesos);
@@ -143,6 +144,11 @@ int funcionDelMaster(int N, int nrProcesos)
         #endif
     }
 
+    #ifdef DEBUG
+    printf("Final: %d. Matriz: \n",numIteraciones);
+    printMatriz(N,N,A);
+    #endif
+    MPI_Gather(A+1,tamBloque,MPI_DATA_T,original,tamBloque,MPI_DATA_T,ROOT_P,MPI_COMM_WORLD);
     printf("Tiempo en segundos %f\n", dwalltime() - timetick);
     free(A);
     free(B);
@@ -151,16 +157,25 @@ int funcionDelMaster(int N, int nrProcesos)
 
 int funcionSlave(int tid, int N, int nrProcesos) {
     DATA_T *A, *B, *swapAux;
-	int bloque = ((N*N) / nrProcesos) ;
+	int tamBloque = (N*N) / nrProcesos;
 	int converge,i,convergeG = 0, numIteracion=0;
 	DATA_T data0;
 
+    #ifdef DEBUG
+    printf("Alloco para: %d\n",tamBloque + N*(2 - (tid == nrProcesos-1)));
+    #endif
+
     // Aloca memoria para los vectores
-	A = (DATA_T *) malloc(sizeof(DATA_T) * bloque + 2*N - N*(tid == nrProcesos-1) );
-	B = (DATA_T *) malloc(sizeof(DATA_T) * bloque + 2*N - N*(tid == nrProcesos-1) );
+	A = (DATA_T *) malloc(sizeof(DATA_T) * tamBloque + N*(2 - (tid == nrProcesos-1)));
+	B = (DATA_T *) malloc(sizeof(DATA_T) * tamBloque + N*(2 - (tid == nrProcesos-1)));
 
     // Recibir el bloque
-    MPI_Scatter(NULL, 0, MPI_DATA_T, &A[N], bloque, MPI_DATA_T, ROOT_P, MPI_COMM_WORLD);
+    MPI_Scatter(NULL, 0, MPI_DATA_T, &A[N], tamBloque, MPI_DATA_T, ROOT_P, MPI_COMM_WORLD);
+
+    #ifdef DEBUG
+    printf("Matriz inicial: \n");
+    printMatriz(N/nrProcesos+2,N,A);
+    #endif
 
     while (!convergeG && numIteracion<10) {
         // Recibo B[0] en data0
@@ -173,13 +188,13 @@ int funcionSlave(int tid, int N, int nrProcesos) {
         if(tid != nrProcesos-1){
             // envio mis valores a los vecinos
 			MPI_Isend(&A[N], N, MPI_DATA_T, tid-1, 1, MPI_COMM_WORLD, &request);
-			MPI_Isend(&A[bloque], N, MPI_DATA_T, tid+1, 1, MPI_COMM_WORLD, &request);
+			MPI_Isend(&A[tamBloque], N, MPI_DATA_T, tid+1, 1, MPI_COMM_WORLD, &request);
 
 			// recibo el valor del vecino izquierdo
 			MPI_Irecv(A, N, MPI_DATA_T, tid-1, 1, MPI_COMM_WORLD, &request);
 			MPI_Wait(&request, &status);
 			// recibo el valor del vecino derecho
-			MPI_Irecv(&A[bloque+N], N, MPI_DATA_T, tid+1, 1, MPI_COMM_WORLD, &request);
+			MPI_Irecv(&A[tamBloque+N], N, MPI_DATA_T, tid+1, 1, MPI_COMM_WORLD, &request);
 			MPI_Wait(&request, &status);
         }else{
             
@@ -192,7 +207,7 @@ int funcionSlave(int tid, int N, int nrProcesos) {
 
         
         //Calculo de Promedio y convergencia
-        converge = procesamientoSlave(A, B, N, (N/nrProcesos) - (tid==nrProcesos) , tid,data0,nrProcesos);
+        converge = procesamientoSlave(A, B, N, (N/nrProcesos) - (tid==nrProcesos-1) , tid,data0,nrProcesos);
 
         // Chequeo convergencia global
   	    MPI_Allreduce(&converge, &convergeG, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
@@ -205,10 +220,11 @@ int funcionSlave(int tid, int N, int nrProcesos) {
             numIteracion++;
         }
         #ifdef DEBUG
-        printf("Iteracion: %d. Matriz: \n",numIteracion);
-        printMatriz(N/nrProcesos+1,N,A);
+        printf("MATRIZ A ITERACION: %d\n",numIteracion);
+        printMatriz(N/nrProcesos+2,N,A);
         #endif
     }
+    MPI_Gather(A+1,tamBloque,MPI_DATA_T,NULL,tamBloque,MPI_DATA_T,ROOT_P,MPI_COMM_WORLD);
     free(A);
     free(B);
 }
@@ -310,8 +326,7 @@ int procesamientoSlave(DATA_T *A, DATA_T *B, int N, int filasCalculo, int tid,in
     int i,j,inj,converge;
 
     converge =1;
-
-    for(i= 1;converge && i<filasCalculo;i++) {
+    for(i= 1;converge && i<filasCalculo+1;i++) {
         //Calculo primer elemento de la fila (calculo de todas las primeras columnas)
         //B[i,0] = ...
         B[i*N]=(  A[(i-1)*N] + A[(i-1)*N+1]     //2 elems de fila anterior
@@ -348,7 +363,7 @@ int procesamientoSlave(DATA_T *A, DATA_T *B, int N, int filasCalculo, int tid,in
     }
 
     //Actualizo los valores que quedaron pendientes sin verificar convergencia
-    for(;i<filasCalculo;i++) {
+    for(;i<filasCalculo+1;i++) {
         //Calculo primer elemento de la fila (calculo de todas las primeras columnas)
         //B[i,0] = ...
         B[i*N] = (A[(i-1)*N] + A[(i-1)*N+1] //2 elems de fila anterior
@@ -372,46 +387,49 @@ int procesamientoSlave(DATA_T *A, DATA_T *B, int N, int filasCalculo, int tid,in
     }
 
         
-        if(tid==nrProcesos-1){
-            //Calculo ULTIMA FILA
-            //Primer elemento: Calculo esquina izquierda inferior B[N-1,0]
-            B[(N-1)*N] = (A[(N-2)*N] +  A[(N-2)*N+1] 
-                    + A[(N-1)*N] + A[(N-1)*N+1]
-                    ) * 0.25;
-            //Verifico convergencia
-            if (converge && fabs(data0-B[(N-1)*N])>precision){
+    if(tid==nrProcesos-1){
+        i=filasCalculo+1;
+        //Calculo ULTIMA FILA
+        //Primer elemento: Calculo esquina izquierda inferior B[N-1,0]
+        B[i*N] = (A[(i-1)*N] +  A[(i-1)*N+1] 
+                + A[i*N] + A[i*N+1]
+                ) * 0.25;
+        //Verifico convergencia
+        if (converge && fabs(data0-B[i*N])>precision){
+            converge = 0;
+        }
+        //Calculo ultima fila verificando convergencia
+        //B[N-1,j]
+        i=filasCalculo+1;
+        for(j=1;j<N-1;j++){
+            inj= i*N+j;
+            B[inj] = ( A[inj-1] + A[inj] + A[inj+1]         //3 elems de fila actual
+                    + A[inj-1-N] + A[inj-N] + A[inj+1-N]       //3 elems de fila anterior
+                    ) * (1.0/6);                               //divido por 6
+            //Calculo convergencia
+            if (fabs(data0-B[inj])>precision){
                 converge = 0;
-            }
-            //Calculo ultima fila verificando convergencia
-            //B[N-1,j]
-            i=N-1;
-            for(j=1;j<N-1;j++){
-                inj= i*N+j;
-                B[inj] = ( A[inj-1] + A[inj] + A[inj+1]         //3 elems de fila actual
-                     + A[inj-1-N] + A[inj-N] + A[inj+1-N]       //3 elems de fila anterior
-                     ) * (1.0/6);                               //divido por 6
-                //Calculo convergencia
-                if (fabs(data0-B[inj])>precision){
-                    converge = 0;
-                    j++;
-                    break;
-                }
-            }
-            //Calculo del resto de columnas sin verificar convergencia
-            for(;j<N-1;j++){
-                inj= i*N+j;
-                B[inj] = ( A[inj-1] + A[inj] + A[inj+1]         //3 elems de fila actual
-                     + A[inj-1-N] + A[inj-N] + A[inj+1-N]       //3 elems de fila anterior
-                     ) * (1.0/6);
-            }
-            //Ultimo elemento: Esquina derecha inferior, B[N-1,N-1]
-            //j=N-1
-            B[N*N-1] = (A[N*N-2] + A[N*N-1] + A[N*j-2] + A[N*j-1])*0.25;
-            //Verifico convergencia de ultimo elemento
-            if (converge && fabs(data0-B[N*N-1])>precision){
-                converge = 0;
+                j++;
+                break;
             }
         }
+        //Calculo del resto de columnas sin verificar convergencia
+        for(;j<N-1;j++){
+            inj= i*N+j;
+            B[inj] = ( A[inj-1] + A[inj] + A[inj+1]         //3 elems de fila actual
+                    + A[inj-1-N] + A[inj-N] + A[inj+1-N]       //3 elems de fila anterior
+                    ) * (1.0/6);
+        }
+        //Ultimo elemento: Esquina derecha inferior, B[N-1,N-1]
+        //j=N-1
+        B[i*N+N-1] = (A[(i-1)*N+N-1] +  A[(i-1)*N-1+N-1] 
+                + A[i*N+N-1] + A[i*N-1+N-1]
+                ) * 0.25;
+        //Verifico convergencia de ultimo elemento
+        if (converge && fabs(data0-B[i*N+N-1])>precision){
+            converge = 0;
+        }
+    }
 
     return converge;
 }

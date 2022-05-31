@@ -68,10 +68,10 @@ void funcionDelMaster(int N, int nrProcesos) {
   //A guarda vector entero, B guarda el resultado de la iteracion actual
   DATA_T *A, *B, *swapAux,*originalA,*originalB; 
   int tamBloque = N / nrProcesos;
-  int converge, numIteraciones = 0;
-  int convergeG = 0;
+  int numIteraciones = 0;
+  int converge,convergeG = 0;
   double timetick;
-
+  
   // Aloca memoria para los vectores
   A = (DATA_T*)malloc(sizeof(DATA_T) * N);
   B = (DATA_T*)malloc(sizeof(DATA_T) * tamBloque + 1);
@@ -124,7 +124,7 @@ void funcionDelMaster(int N, int nrProcesos) {
       B[i] = (A[i - 1] + A[i] + A[i + 1]) * (1.0 / 3);
     }
     // Chequeo convergencia global
-    MPI_Allreduce(&converge, &convergeG, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
+    MPI_Allreduce(&converge, &convergeG, 1, MPI_C_BOOL, MPI_LAND, MPI_COMM_WORLD);
     if (!convergeG) {
       swapAux = A;
       A = B;
@@ -168,7 +168,7 @@ void funcionSlave(int tid, int N, int nrProcesos) {
   // Aloca memoria para los vectores
   A = (DATA_T*)malloc(sizeof(DATA_T) * tamBloque + 2);
   B = (DATA_T*)malloc(sizeof(DATA_T) * tamBloque + 2);
-
+  printf("A=%p y B=%p\n",A,B);
   
   //Datos para send y receive
   MPI_Request request;
@@ -182,16 +182,27 @@ void funcionSlave(int tid, int N, int nrProcesos) {
     // Recibo B[0] en data0
     MPI_Bcast(&data0, 1, MPI_DATA_T, 0, MPI_COMM_WORLD);
 
+    #ifdef DEBUG
+    printf("&A[1]=%p y &A[tamBloque]=%p\n",&A[1],&A[tamBloque]);
+    #endif
     //Envio mis valores a los vecinos
     MPI_Isend(&A[1], 1, MPI_DATA_T, tid - 1, 1, MPI_COMM_WORLD, &request);
     MPI_Isend(&A[tamBloque], 1, MPI_DATA_T, tid + 1, 1, MPI_COMM_WORLD,&request);
+    
+    #ifdef DEBUG
+    printf("A=%p y ",A);
+    #endif
 
     //Recibo el valor del vecino izquierdo
     MPI_Irecv(A, 1, MPI_DATA_T, tid - 1, 1, MPI_COMM_WORLD, &request);
     MPI_Wait(&request, &status);
 
+    #ifdef DEBUG
+    printf("A+tamBloque+1=%p\n",A+tamBloque+1);
+    #endif
+
     //Recibo el valor del vecino derecho
-    MPI_Irecv(A+tamBloque/*SI PONES +1 ACA EXPLOTA*/, 1, MPI_DATA_T, tid + 1, 1, MPI_COMM_WORLD,&request);
+    MPI_Irecv(A+tamBloque+1, 1, MPI_DATA_T, tid + 1, 1, MPI_COMM_WORLD,&request);
     MPI_Wait(&request, &status);
     converge = 1;
 
@@ -210,7 +221,7 @@ void funcionSlave(int tid, int N, int nrProcesos) {
     }
 
     // Chequeo de convergencia global
-    MPI_Allreduce(&converge, &convergeG, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
+    MPI_Allreduce(&converge, &convergeG, 1, MPI_C_BOOL, MPI_LAND, MPI_COMM_WORLD);
 
     if (!convergeG) {
       swapAux = A;
@@ -284,7 +295,7 @@ void funcionSlaveLast(int N, int nrProcesos) {
       converge = 0;
     }
     // Chequeo de convergencia global
-    MPI_Allreduce(&converge, &convergeG, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
+    MPI_Allreduce(&converge, &convergeG, 1, MPI_C_BOOL, MPI_LAND, MPI_COMM_WORLD);
 
     if (!convergeG) {
       swapAux = A;

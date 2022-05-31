@@ -1,15 +1,18 @@
-munmap_chunk(): invalid pointer
-[ARJ2MS8C3:60892] *** Process received signal ***
-[ARJ2MS8C3:60892] Signal: Aborted (6)
-[ARJ2MS8C3:60892] Signal code:  (-6)
-[ARJ2MS8C3:60892] [ 0] /lib/x86_64-linux-gnu/libc.so.6(+0x43090)[0x7f1f9bd5f090]
-[ARJ2MS8C3:60892] [ 1] /lib/x86_64-linux-gnu/libc.so.6(gsignal+0xcb)[0x7f1f9bd5f00b]
-[ARJ2MS8C3:60892] [ 2] /lib/x86_64-linux-gnu/libc.so.6(abort+0x12b)[0x7f1f9bd3e859]
-[ARJ2MS8C3:60892] [ 3] /lib/x86_64-linux-gnu/libc.so.6(+0x8d26e)[0x7f1f9bda926e]
-[ARJ2MS8C3:60892] [ 4] /lib/x86_64-linux-gnu/libc.so.6(+0x952fc)[0x7f1f9bdb12fc]
-[ARJ2MS8C3:60892] [ 5] /lib/x86_64-linux-gnu/libc.so.6(+0x9554c)[0x7f1f9bdb154c]
-[ARJ2MS8C3:60892] [ 6] out/vector.o(+0x1f44)[0x5558b3505f44]
-[ARJ2MS8C3:60892] [ 7] out/vector.o(+0x14a3)[0x5558b35054a3]
-[ARJ2MS8C3:60892] [ 8] /lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0xf3)[0x7f1f9bd40083]
-[ARJ2MS8C3:60892] [ 9] out/vector.o(+0x12ce)[0x5558b35052ce]
-[ARJ2MS8C3:60892] *** End of error message ***
+[evaristo-Lenovo-YOGA-730-13IKB:229352] *** Process received signal ***
+[evaristo-Lenovo-YOGA-730-13IKB:229352] Signal: Segmentation fault (11)
+[evaristo-Lenovo-YOGA-730-13IKB:229352] Signal code:  (128)
+[evaristo-Lenovo-YOGA-730-13IKB:229352] Failing at address: (nil)
+[evaristo-Lenovo-YOGA-730-13IKB:229352] [ 0] /lib/x86_64-linux-gnu/libc.so.6(+0x42520)[0x7f825d340520]
+[evaristo-Lenovo-YOGA-730-13IKB:229352] [ 1] /home/evaristo/opt/openmpi/lib/openmpi/mca_pml_ob1.so(mca_pml_ob1_recv_req_start+0x2a0)[0x7f8256ff08a0]
+[evaristo-Lenovo-YOGA-730-13IKB:229352] [ 2] /home/evaristo/opt/openmpi/lib/openmpi/mca_pml_ob1.so(mca_pml_ob1_irecv+0x14f)[0x7f8256fe1acf]
+[evaristo-Lenovo-YOGA-730-13IKB:229352] [ 3] /home/evaristo/opt/openmpi/lib/libmpi.so.40(ompi_coll_base_sendrecv_actual+0x85)[0x7f825d5e1ca5]
+[evaristo-Lenovo-YOGA-730-13IKB:229352] [ 4] /home/evaristo/opt/openmpi/lib/libmpi.so.40(ompi_coll_base_allreduce_intra_recursivedoubling+0x298)[0x7f825d5e3328]
+[evaristo-Lenovo-YOGA-730-13IKB:229352] [ 5] /home/evaristo/opt/openmpi/lib/libmpi.so.40(ompi_coll_base_allreduce_intra_ring+0x8a1)[0x7f825d5e4a31]
+[evaristo-Lenovo-YOGA-730-13IKB:229352] [ 6] /home/evaristo/opt/openmpi/lib/openmpi/mca_coll_tuned.so(ompi_coll_tuned_allreduce_intra_dec_fixed+0x4f)[0x7f8256f3c08f]
+[evaristo-Lenovo-YOGA-730-13IKB:229352] [ 7] /home/evaristo/opt/openmpi/lib/libmpi.so.40(PMPI_Allreduce+0x131)[0x7f825d59d381]
+[evaristo-Lenovo-YOGA-730-13IKB:229352] [ 8] matriz.o(+0x1d87)[0x55d76ee16d87]
+[evaristo-Lenovo-YOGA-730-13IKB:229352] [ 9] matriz.o(+0x154e)[0x55d76ee1654e]
+[evaristo-Lenovo-YOGA-730-13IKB:229352] [10] /lib/x86_64-linux-gnu/libc.so.6(+0x29d90)[0x7f825d327d90]
+[evaristo-Lenovo-YOGA-730-13IKB:229352] [11] /lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0x80)[0x7f825d327e40]
+[evaristo-Lenovo-YOGA-730-13IKB:229352] [12] matriz.o(+0x12c5)[0x55d76ee162c5]
+[evaristo-Lenovo-YOGA-730-13IKB:229352] *** End of error message ***

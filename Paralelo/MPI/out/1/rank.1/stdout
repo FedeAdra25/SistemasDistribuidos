@@ -26,39 +26,7 @@ Proces 1 postPasaje:
 
 
 
-Proces 1 comienza procesamiento
-calculo B[1,0]
-calculo B[1,1]
-calculo B[1,2]
-calculo B[1,3]
-calculo B[1,4]
-calculo B[1,5]
-calculo B[1,6]
-calculo B[1,7]
-calculo B[2,0]
-calculo B[2,1]
-calculo B[2,2]
-calculo B[2,3]
-calculo B[2,4]
-calculo B[2,5]
-calculo B[2,6]
-calculo B[2,7]
-calculo B[3,0]
-calculo B[3,1]
-calculo B[3,2]
-calculo B[3,3]
-calculo B[3,4]
-calculo B[3,5]
-calculo B[3,6]
-calculo B[3,7]
-calculo B[4,0]
-calculo B[4,1]
-calculo B[4,2]
-calculo B[4,3]
-calculo B[4,4]
-calculo B[4,5]
-calculo B[4,6]
-calculo B[4,7]
+Hilo1 converge: 0 conveergeG:1071017063 iteracion:0
 Proces1 termino procesamiento iteracion:0
 Proces 1 postCalculo:
 

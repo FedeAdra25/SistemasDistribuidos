@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #Este script genera los archivos compilados de vector.c y matriz.c
-debug=${1:-"-DDEBUG -DPROCE_SLAVE -DPRINT_MATRIZ -DPROCE_MASTER -DCONVERGE"} # -DPRINT_VEC -DPRUEBA -DPRINT_MATRIZ -DCONVERGE
+debug=${1:-"-DDEBUG -DPRINT_MATRIZ -DCONVERGE"} # -DPRINT_VEC -DPRUEBA -DPRINT_MATRIZ -DCONVERGE
 
 # Guardamos el directorio del script
 SCRIPT_DIR=$(dirname $0)

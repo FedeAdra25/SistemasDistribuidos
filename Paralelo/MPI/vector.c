@@ -52,6 +52,7 @@ int main(int argc, char** argv) {
     funcionDelMaster(N, nrProcesos);
   } else {
     funcionSlave(miID, N, nrProcesos);
+    printf("Proceso %d sali de la funcion",miID);
   }
 
   MPI_Finalize();  // Finaliza el ambiente MPI. No debe haber sentencias después
@@ -158,14 +159,16 @@ void funcionDelMaster(int N, int nrProcesos) {
 void funcionSlave(int tid, int N, int nrProcesos) {
   DATA_T *A, *B, *swapAux;
   int tamBloque = N / nrProcesos;
-  int converge, i, convergeG = 0;
+  int *convergencias, i,numIteraciones=0;
+  // int converge, convergeG = 0;
   DATA_T data0;
 
   // Aloca memoria para los vectores
   A = (DATA_T*)malloc(sizeof(DATA_T) * tamBloque + 2 - (tid == nrProcesos - 1));
   B = (DATA_T*)malloc(sizeof(DATA_T) * tamBloque + 2 - (tid == nrProcesos - 1));
+  convergencias = (int*)malloc(sizeof(int) * 2);
+  convergencias[1]= 0;
 
-  
   //Datos para send y receive
   MPI_Request request;
   MPI_Status status;
@@ -174,7 +177,7 @@ void funcionSlave(int tid, int N, int nrProcesos) {
   MPI_Scatter(&A[1], 0, MPI_DATA_T,         //Pointer to data, length, type
               &A[1], tamBloque, MPI_DATA_T, //Pointer to data received, length, type
               ROOT_PID, MPI_COMM_WORLD);
-  while (!convergeG) {
+  while (!convergencias[1]) {
     // Recibo B[0] en data0
     MPI_Bcast(&data0, 1, MPI_DATA_T, 0, MPI_COMM_WORLD);
 
@@ -201,13 +204,13 @@ void funcionSlave(int tid, int N, int nrProcesos) {
       MPI_Irecv(A, 1, MPI_DATA_T, tid - 1, 1, MPI_COMM_WORLD, &request);
       MPI_Wait(&request, &status);
     }
-    converge = 1;
+    convergencias[0] = 1;
 
     //Calculo promedio y convergencia
     for (i = 1; i < tamBloque + 1 - (tid == nrProcesos - 1); i++) {
       B[i] = (A[i - 1] + A[i] + A[i + 1]) * (1.0 / 3);
       if (fabs(data0 - B[i]) > precision) {
-        converge = 0;
+        convergencias[0] = 0;
         i++;
         break;
       }
@@ -220,14 +223,19 @@ void funcionSlave(int tid, int N, int nrProcesos) {
     //Calculo de ultimo elemento si soy el ultimo proceso
     if (tid == nrProcesos - 1) {
       B[tamBloque] = (A[tamBloque - 1] + A[tamBloque]) * 0.5;
-      if (converge && fabs(data0 - B[i]) > precision) {
-        converge = 0;
+      if (convergencias[0] && fabs(data0 - B[i]) > precision) {
+        convergencias[0] = 0;
       }
     }
     // Chequeo de convergencia global
-    MPI_Allreduce(&converge, &convergeG, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
+    MPI_Allreduce(&convergencias[0], &convergencias[1], 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
 
-    if (!convergeG) {
+    #ifdef DEBUG
+    printf("iteracion: %d convergenciaLocal: %d, convergenciaGlobal: %d\n",numIteraciones, convergencias[0],convergencias[1]);
+    #endif
+
+    if (!convergencias[1]) {
+      numIteraciones++;
       swapAux = A;
       A = B;
       B = swapAux;
@@ -237,17 +245,23 @@ void funcionSlave(int tid, int N, int nrProcesos) {
   printf("Proceso: %d - Envia: B+1=%p - val0: %.5f - A=%p - tamBloque=%d\n",tid,B+1,B[1],A,tamBloque);
   #endif
 
-  //Si convergeG=1, no hice el swap, envio datos finales
+  //Si convergencias[1]=1, no hice el swap, envio datos finales
   MPI_Gather(B+1,tamBloque,MPI_DATA_T,A,0,MPI_DATA_T,ROOT_PID,MPI_COMM_WORLD);
 
   #ifdef DEBUG
-  printf("P: %d hace Free de %p y %p\nPunteros: A=%p,B=%p,swapaux=%p,tamBloque=%p,data0=%p,converge=%p,",tid,A,B,A,B,swapAux,&tamBloque,&data0,&converge);
+  printf("P: %d hace Free de %p y %p\nPunteros: A=%p,B=%p,swapaux=%p,tamBloque=%p,data0=%p,converge=%p,",tid,A,B,A,B,swapAux,&tamBloque,&data0,&convergencias[0]);
   printVector(tamBloque,B+1);
   #endif
 
-  sleep(2);
+  printf("free convergencia\n");
+  free(convergencias);
+  printf("free convergencia reaalizada\n");
+  printf("free A\n");
   free(A);
+  printf("free A realizada\n");
+  printf("free B \n");
   free(B);
+  printf("free B realizada\n");
 }
 
 DATA_T randFP(DATA_T min, DATA_T max) {
@@ -264,6 +278,7 @@ double dwalltime() {
   sec = tv.tv_sec + tv.tv_usec / 1000000.0;
   return sec;
 }
+
 void printVector(int N, DATA_T* M) {
   printf("Vector = [");
   for (int i = 0; i < N; i++) {

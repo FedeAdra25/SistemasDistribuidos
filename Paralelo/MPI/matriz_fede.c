@@ -177,7 +177,7 @@ int funcionSlave(int tid, int N, int nrProcesos) {
     printMatriz(N/nrProcesos+2,N,A);
     #endif
 
-    while (!convergeG && numIteracion<10) {
+    while (!convergeG ) {
         // Recibo B[0] en data0
         MPI_Bcast(&data0, 1, MPI_DATA_T, 0, MPI_COMM_WORLD);
 

@@ -1,0 +1,18 @@
+[evaristo-Lenovo-YOGA-730-13IKB:243485] *** Process received signal ***
+[evaristo-Lenovo-YOGA-730-13IKB:243485] Signal: Segmentation fault (11)
+[evaristo-Lenovo-YOGA-730-13IKB:243485] Signal code: Address not mapped (1)
+[evaristo-Lenovo-YOGA-730-13IKB:243485] Failing at address: 0x55a290000000
+[evaristo-Lenovo-YOGA-730-13IKB:243485] [ 0] /lib/x86_64-linux-gnu/libc.so.6(+0x42520)[0x7fad1d7ec520]
+[evaristo-Lenovo-YOGA-730-13IKB:243485] [ 1] /lib/x86_64-linux-gnu/libc.so.6(free+0x69)[0x7fad1d84f4c9]
+[evaristo-Lenovo-YOGA-730-13IKB:243485] [ 2] /home/evaristo/opt/openmpi/lib/openmpi/mca_pmix_pmix3x.so(pmix_mca_base_var_finalize+0x319)[0x7fad1cc698b9]
+[evaristo-Lenovo-YOGA-730-13IKB:243485] [ 3] /home/evaristo/opt/openmpi/lib/openmpi/mca_pmix_pmix3x.so(pmix_rte_finalize+0xa2)[0x7fad1cc45ec2]
+[evaristo-Lenovo-YOGA-730-13IKB:243485] [ 4] /home/evaristo/opt/openmpi/lib/openmpi/mca_pmix_pmix3x.so(PMIx_Finalize+0x541)[0x7fad1cc09e71]
+[evaristo-Lenovo-YOGA-730-13IKB:243485] [ 5] /home/evaristo/opt/openmpi/lib/openmpi/mca_pmix_pmix3x.so(pmix3x_client_finalize+0x39a)[0x7fad1cbd270a]
+[evaristo-Lenovo-YOGA-730-13IKB:243485] [ 6] /home/evaristo/opt/openmpi/lib/openmpi/mca_ess_pmi.so(+0x2795)[0x7fad1d4c9795]
+[evaristo-Lenovo-YOGA-730-13IKB:243485] [ 7] /home/evaristo/opt/openmpi/lib/libopen-rte.so.40(orte_finalize+0x65)[0x7fad1d708185]
+[evaristo-Lenovo-YOGA-730-13IKB:243485] [ 8] /home/evaristo/opt/openmpi/lib/libmpi.so.40(ompi_mpi_finalize+0x8bc)[0x7fad1da35fbc]
+[evaristo-Lenovo-YOGA-730-13IKB:243485] [ 9] out/vector.o(+0x14c3)[0x55a2904f04c3]
+[evaristo-Lenovo-YOGA-730-13IKB:243485] [10] /lib/x86_64-linux-gnu/libc.so.6(+0x29d90)[0x7fad1d7d3d90]
+[evaristo-Lenovo-YOGA-730-13IKB:243485] [11] /lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0x80)[0x7fad1d7d3e40]
+[evaristo-Lenovo-YOGA-730-13IKB:243485] [12] out/vector.o(+0x12c5)[0x55a2904f02c5]
+[evaristo-Lenovo-YOGA-730-13IKB:243485] *** End of error message ***

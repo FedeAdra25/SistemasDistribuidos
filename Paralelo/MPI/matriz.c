@@ -5,6 +5,7 @@
 #include <sys/time.h>
 
 #define ROOT_P 0
+#define USE_FLOAT
 #ifndef USE_FLOAT
     #define DATA_T double
     #define MPI_DATA_T MPI_DOUBLE
@@ -135,7 +136,8 @@ int funcionDelMaster(int N, int nrProcesos)
         #endif
 
         //procesamiento
-        converge = procesamientoMaster(A,B,N,N/nrProcesos);
+        //converge = procesamientoMaster(A,B,N,N/nrProcesos);
+        converge = 1;
 
         #ifdef PROCE_MASTER
         printf("MASTER termino procesamiento iteracion:%d\n",numIteraciones);
@@ -182,16 +184,6 @@ int funcionSlave(int tid, int N, int nrProcesos) {
 	A = (DATA_T *) malloc(sizeof(DATA_T) * bloque + 2*N - N*(tid == nrProcesos-1) );
 	B = (DATA_T *) malloc(sizeof(DATA_T) * bloque + 2*N - N*(tid == nrProcesos-1) );
     convergencias = (int *) malloc(sizeof(int) * 2 );   //pos0:local pos1:global
-
-    printf("espacio alocado en B : %d\n",bloque + 2*N - N*(tid == nrProcesos-1));
-    int f,j;
-    for(i=0;i<N/nrProcesos+2 -(tid == nrProcesos-1) ;i++) {
-        f=i*N;
-        for(j=0;j<N;j++){
-            printf("cero en la posicion %d \n",f+j);
-            B[f+j] = 0;
-        }
-	}
 
     convergencias[1] = 0; 
     // Recibir el bloque
@@ -246,7 +238,8 @@ int funcionSlave(int tid, int N, int nrProcesos) {
 
         
         // calculo Promedio y convergencia
-        convergencias[0] = procesamientoSlave(A, B, N, (N/nrProcesos) - (tid==(nrProcesos-1)) , tid,data0,nrProcesos);
+        convergencias[0] = 1;
+        //convergencias[0] = procesamientoSlave(A, B, N, (N/nrProcesos) - (tid==(nrProcesos-1)) , tid,data0,nrProcesos);
 
         #ifdef CONVERGE  
         printf("Hilo%d converge: %d conveergeG:%d iteracion:%d\n",tid,convergencias[0],convergencias[1],numIteracion);

@@ -5,6 +5,7 @@
 #include <sys/time.h>
 
 #define ROOT_PID 0
+#define USE_FLOAT
 #ifndef USE_FLOAT
 #define DATA_T double
 #define MPI_DATA_T MPI_DOUBLE
@@ -78,6 +79,7 @@ void funcionDelMaster(int N, int nrProcesos) {
     A[i] = randFP(0.0, 1.0);
   }
   #ifdef DEBUG
+  printf("A= %p\n",A);
   printVector(N,A);
   #endif
 
@@ -91,6 +93,11 @@ void funcionDelMaster(int N, int nrProcesos) {
   MPI_Scatter(A, tamBloque, MPI_DATA_T, //Pointer to data, length, type
               A, tamBloque, MPI_DATA_T, //Pointer to data received, length, type
               ROOT_PID, MPI_COMM_WORLD);
+
+  #ifdef DEBUG
+  printf("A= %p originalA=%p \n",A,originalA);
+  printVector(N,A);
+  #endif
 
   while (!convergeG) {
     B[0] = (A[0] + A[1]) * 0.5;
@@ -120,9 +127,9 @@ void funcionDelMaster(int N, int nrProcesos) {
     for (; i < tamBloque; i++) {
       B[i] = (A[i - 1] + A[i] + A[i + 1]) * (1.0 / 3);
     }
-
     // Chequeo convergencia global
     MPI_Allreduce(&converge, &convergeG, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
+
     if (!convergeG) {
       swapAux = A;
       A = B;
@@ -138,13 +145,13 @@ void funcionDelMaster(int N, int nrProcesos) {
 
   //Si convergeG=1 no hice swap
   printf("Iteraciones: %d\n", numIteraciones);
-  MPI_Gather(B+1,tamBloque,MPI_DATA_T,originalA,tamBloque,MPI_DATA_T,ROOT_PID,MPI_COMM_WORLD);
+  MPI_Gather(A,tamBloque,MPI_DATA_T,originalA,tamBloque,MPI_DATA_T,ROOT_PID,MPI_COMM_WORLD);
   printf("Tiempo en segundos: %f\n", dwalltime() - timetick);
   
   printf("Resultado: \n");
   
   #ifdef DEBUG
-  printVector(N,A);
+  printVector(N,originalA);
   #endif
 
   #ifdef DEBUG
@@ -164,8 +171,8 @@ void funcionSlave(int tid, int N, int nrProcesos) {
   DATA_T data0;
 
   // Aloca memoria para los vectores
-  A = (DATA_T*)malloc(sizeof(DATA_T) * tamBloque + 2 - (tid == nrProcesos - 1));
   B = (DATA_T*)malloc(sizeof(DATA_T) * tamBloque + 2 - (tid == nrProcesos - 1));
+  A = (DATA_T*)malloc(sizeof(DATA_T) * tamBloque + 2 - (tid == nrProcesos - 1));
   convergencias = (int*)malloc(sizeof(int) * 2);
   convergencias[1]= 0;
 
@@ -174,7 +181,7 @@ void funcionSlave(int tid, int N, int nrProcesos) {
   MPI_Status status;
 
   // Recibir el bloque
-  MPI_Scatter(&A[1], 0, MPI_DATA_T,         //Pointer to data, length, type
+  MPI_Scatter(NULL, 0, MPI_DATA_T,         //Pointer to data, length, type
               &A[1], tamBloque, MPI_DATA_T, //Pointer to data received, length, type
               ROOT_PID, MPI_COMM_WORLD);
   while (!convergencias[1]) {
@@ -187,12 +194,12 @@ void funcionSlave(int tid, int N, int nrProcesos) {
       MPI_Isend(&A[1], 1, MPI_DATA_T, tid - 1, 1, MPI_COMM_WORLD, &request);
       MPI_Isend(&A[tamBloque], 1, MPI_DATA_T, tid + 1, 1, MPI_COMM_WORLD,&request);
 
-      //Recibo el valor del vecino izquierdo
-      MPI_Irecv(A, 1, MPI_DATA_T, tid - 1, 1, MPI_COMM_WORLD, &request);
+      //Recibo el valor del vecino derecho
+      MPI_Irecv(A+tamBloque + 1, 1, MPI_DATA_T, tid + 1, 1, MPI_COMM_WORLD,&request);
       MPI_Wait(&request, &status);
 
-      //Recibo el valor del vecino derecho
-      MPI_Irecv(&A[tamBloque + 1], 1, MPI_DATA_T, tid + 1, 1, MPI_COMM_WORLD,&request);
+      //Recibo el valor del vecino izquierdo
+      MPI_Irecv(A, 1, MPI_DATA_T, tid - 1, 1, MPI_COMM_WORLD, &request);
       MPI_Wait(&request, &status);
 
     }
@@ -227,6 +234,7 @@ void funcionSlave(int tid, int N, int nrProcesos) {
         convergencias[0] = 0;
       }
     }
+
     // Chequeo de convergencia global
     MPI_Allreduce(&convergencias[0], &convergencias[1], 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
 
@@ -246,7 +254,7 @@ void funcionSlave(int tid, int N, int nrProcesos) {
   #endif
 
   //Si convergencias[1]=1, no hice el swap, envio datos finales
-  MPI_Gather(B+1,tamBloque,MPI_DATA_T,A,0,MPI_DATA_T,ROOT_PID,MPI_COMM_WORLD);
+  MPI_Gather(A+1,tamBloque,MPI_DATA_T,NULL,0,MPI_DATA_T,ROOT_PID,MPI_COMM_WORLD);
 
   #ifdef DEBUG
   printf("P: %d hace Free de %p y %p\nPunteros: A=%p,B=%p,swapaux=%p,tamBloque=%p,data0=%p,converge=%p,",tid,A,B,A,B,swapAux,&tamBloque,&data0,&convergencias[0]);

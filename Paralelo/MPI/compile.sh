@@ -9,14 +9,14 @@ echo "Todos los argumentos = $@"
 cd $SCRIPT_DIR
 
 # mpicc $debug -o out/vector2.o vecPasoEsquinas.c
-mpicc $debug -o out/vector.o vector.c
+mpicc $debug -o out/vector_p.o vector.c
 
 #comando que estoy usando ahora mismo
 #mpirun -v -output-filename out/ -np 4 out/vector.o 512
 
 mpicc $debug -o out/matriz.o matriz.c
 # mpicc $debug -o out/matriz.o matriz.c
-# mpirun -v -output-filename out/ -np 4 out/matriz.o 1024
+#mpirun -v -output-filename out/ -np 4 out/matriz.o 1024
 #mpirun -np 2 vector.o 16
 
 #Matriz

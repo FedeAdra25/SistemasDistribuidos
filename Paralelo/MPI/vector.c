@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 
-#define MAX_ITERACIONES 1000000
+#define MAX_ITERACIONES 377476
 #define ROOT_PID 0
 #define USE_FLOAT
 #ifndef USE_FLOAT
@@ -139,7 +139,6 @@ void funcionDelMaster(int N, int nrProcesos) {
     
   }
 
-  //Si convergeG=1 no hice swap
   printf("Iteraciones: %d\n", numIteraciones);
   MPI_Gather(B,tamBloque,MPI_DATA_T,originalA,tamBloque,MPI_DATA_T,ROOT_PID,MPI_COMM_WORLD);
   printf("Tiempo en segundos: %f\n", dwalltime() - timetick);

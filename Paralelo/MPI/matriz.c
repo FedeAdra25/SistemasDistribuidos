@@ -106,6 +106,8 @@ int funcionDelMaster(int N, int nrProcesos)
     printMatriz(N,N,A);
     #endif
 
+    MPI_Barrier(MPI_COMM_WORLD); 
+
     timetick = dwalltime();
 
     // Enviar los bloques a cada proceso
@@ -165,7 +167,8 @@ int funcionSlave(int tid, int N, int nrProcesos) {
 	B = (DATA_T *) malloc(sizeof(DATA_T) * (cantFilas+2) * N - N*(tid == nrProcesos-1) );
     convergencias = (int *) malloc(sizeof(int) * 2 );
 
-    
+    MPI_Barrier(MPI_COMM_WORLD); 
+
     convergencias[1] = 0;
     // Recibir el bloque
     MPI_Scatter(NULL, 0, MPI_DATA_T, A+N, cantFilas*N, MPI_DATA_T, ROOT_P, MPI_COMM_WORLD);

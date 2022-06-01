@@ -1,0 +1,32 @@
+Algoritmo Paralelo
+Matriz
+  4 Procesos
+Matriz de 512x512 - 4 procesos
+Tiempo en segundos 1.269232 - Iteraciones: 1786
+Matriz de 1024x1024 - 4 procesos
+Tiempo en segundos 10.366982 - Iteraciones: 3639
+Matriz de 2048x2048 - 4 procesos
+Tiempo en segundos 55.011987 - Iteraciones: 4785
+  2 Procesos
+Matriz de 512x512 - 2 procesos
+Tiempo en segundos 2.438891 - Iteraciones: 1786
+Matriz de 1024x1024 - 2 procesos
+Tiempo en segundos 20.035437 - Iteraciones: 3639
+Matriz de 2048x2048 - 2 procesos
+Tiempo en segundos 106.396084 - Iteraciones: 4785
+=======
+Vector
+  4 Procesos
+Vector de 512 - 4 procesos
+Tiempo en segundos 0.241628 - Iteraciones: 121006
+Vector de 1024 - 4 procesos
+Tiempo en segundos 0.937773 - Iteraciones: 377475
+Vector de 2048 - 4 procesos
+Tiempo en segundos 3.278728 - Iteraciones: 932175
+  2 Procesos
+Vector de 512 - 2 procesos
+Tiempo en segundos 0.235941 - Iteraciones: 121006
+Vector de 1024 - 2 procesos
+Tiempo en segundos 1.152847 - Iteraciones: 377475
+Vector de 2048 - 2 procesos
+Tiempo en segundos 4.694577 - Iteraciones: 932175

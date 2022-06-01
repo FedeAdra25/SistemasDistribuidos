@@ -4,9 +4,8 @@
 #include <stdlib.h>
 #include <sys/time.h>
 
-#define MAX_ITERACIONES 377476
+#define MAX_ITERACIONES 1000000
 #define ROOT_PID 0
-#define USE_FLOAT
 #ifndef USE_FLOAT
 #define DATA_T double
 #define MPI_DATA_T MPI_DOUBLE
@@ -46,11 +45,11 @@ int main(int argc, char** argv) {
     printf("N debe ser mayor a 8 (N=%d)", N);
     return 0;
   }
-  if (argc > 2) {
+  if (argc > 2 && miID==ROOT_PID) {
     printf("%s\n", argv[2]);
   }
 
-  if (miID == 0) {
+  if (miID == ROOT_PID) {
     funcionDelMaster(N, nrProcesos);
   } else {
     funcionSlave(miID, N, nrProcesos);
@@ -72,7 +71,7 @@ void funcionDelMaster(int N, int nrProcesos) {
 
   // Aloca memoria para los vectores
   A = (DATA_T*)malloc(sizeof(DATA_T) * N);
-  B = (DATA_T*)malloc(sizeof(DATA_T) * tamBloque + 1);
+  B = (DATA_T*)malloc(sizeof(DATA_T) * (tamBloque + 1));
 
   // Inicializacion del arreglo
   for (int i = 0; i < N; i++) {
@@ -139,9 +138,8 @@ void funcionDelMaster(int N, int nrProcesos) {
     
   }
 
-  printf("Iteraciones: %d\n", numIteraciones);
   MPI_Gather(B,tamBloque,MPI_DATA_T,originalA,tamBloque,MPI_DATA_T,ROOT_PID,MPI_COMM_WORLD);
-  printf("Tiempo en segundos: %f\n", dwalltime() - timetick);
+  printf("Tiempo en segundos %f - Iteraciones: %d\n", dwalltime() - timetick,numIteraciones);
   
   
   #ifdef DEBUG
@@ -161,8 +159,8 @@ void funcionSlave(int tid, int N, int nrProcesos) {
   DATA_T data0;
 
   // Aloca memoria para los vectores
-  B = (DATA_T*)malloc(sizeof(DATA_T) * tamBloque + 2 - (tid == nrProcesos - 1));
-  A = (DATA_T*)malloc(sizeof(DATA_T) * tamBloque + 2 - (tid == nrProcesos - 1));
+  B = (DATA_T*)malloc(sizeof(DATA_T) * (tamBloque + 2 - (tid == nrProcesos - 1)));
+  A = (DATA_T*)malloc(sizeof(DATA_T) * (tamBloque + 2 - (tid == nrProcesos - 1)));
   convergencias = (int*)malloc(sizeof(int) * 2);
   convergencias[1]= 0;
 

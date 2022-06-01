@@ -7,7 +7,6 @@
 
 #define MAX_ITERACIONES 100000
 #define ROOT_P 0
-#define USE_FLOAT
 #ifndef USE_FLOAT
     #define DATA_T double
     #define MPI_DATA_T MPI_DOUBLE
@@ -59,7 +58,7 @@ int main(int argc, char **argv)
         printf("N debe ser mayor a 8 (N=%d)", N);
         return 0;
     }
-    if (argc > 2) {
+    if (argc > 2 && miID==ROOT_P) {
         printf("%s\n", argv[2]);
     }
 
@@ -163,8 +162,8 @@ int funcionSlave(int tid, int N, int nrProcesos) {
     int *convergencias;
 
     // Aloca memoria para los vectores
-	A = (DATA_T *) malloc(sizeof(DATA_T) * (cantFilas+2) * N - N*(tid == nrProcesos-1) );
-	B = (DATA_T *) malloc(sizeof(DATA_T) * (cantFilas+2) * N - N*(tid == nrProcesos-1) );
+	A = (DATA_T *) malloc(sizeof(DATA_T) * ((cantFilas+2) * N - N*(tid == nrProcesos-1)) );
+	B = (DATA_T *) malloc(sizeof(DATA_T) * ((cantFilas+2) * N - N*(tid == nrProcesos-1)) );
     convergencias = (int *) malloc(sizeof(int) * 2 );
 
     MPI_Barrier(MPI_COMM_WORLD); 
@@ -180,7 +179,7 @@ int funcionSlave(int tid, int N, int nrProcesos) {
 
     while (!convergencias[1] && numIteraciones<MAX_ITERACIONES) {
         // Recibo B[0] en data0
-        MPI_Bcast(&data0, 1, MPI_DATA_T, 0, MPI_COMM_WORLD);
+        MPI_Bcast(&data0, 1, MPI_DATA_T, ROOT_P, MPI_COMM_WORLD);
 
         
         MPI_Request request;

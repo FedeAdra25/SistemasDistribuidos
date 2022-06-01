@@ -87,6 +87,7 @@ void funcionDelMaster(int N, int nrProcesos) {
   MPI_Status status;
   originalA=A; //Esto para asegurarme en el gather que agarro A y no B (porque swapeo)
   originalB=B;
+  MPI_Barrier(MPI_COMM_WORLD);
   timetick = dwalltime();
   // Enviar los bloques a cada proceso
   MPI_Scatter(A, tamBloque, MPI_DATA_T, //Pointer to data, length, type
@@ -168,6 +169,7 @@ void funcionSlave(int tid, int N, int nrProcesos) {
   MPI_Request request;
   MPI_Status status;
 
+  MPI_Barrier(MPI_COMM_WORLD);
   // Recibir el bloque
   MPI_Scatter(NULL, 0, MPI_DATA_T,         //Pointer to data, length, type
               &A[1], tamBloque, MPI_DATA_T, //Pointer to data received, length, type

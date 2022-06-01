@@ -16,8 +16,8 @@ DATA_T randFP(DATA_T min, DATA_T max);
 //para imprimir matriz
 void printVector(int N, DATA_T *M);
 
-//variables compartidas
-int N,T, *converge, convergeG=0,numIteracion= 0;
+//Variables compartidas
+int N,T, *converge, convergeG=0,numIteracion=0;
 DATA_T *A,*B,*swapAux;
 
 pthread_barrier_t barrera;

@@ -1,0 +1,47 @@
+Algoritmo Paralelo
+Matriz
+Matriz de 512x512
+Matriz de 512x512
+Matriz de 512x512
+Matriz de 512x512
+Tiempo en segundos 1.498650 - Iteraciones: 1786
+Matriz de 1024x1024
+Matriz de 1024x1024
+Matriz de 1024x1024
+Matriz de 1024x1024
+Tiempo en segundos 11.916323 - Iteraciones: 3639
+=======
+Vector
+Vector de 512
+Vector de 512
+Vector de 512
+Vector de 512
+free convergencia
+free convergencia reaalizada
+free A
+free A realizada
+free B 
+free B realizada
+free convergencia
+free convergencia reaalizada
+free A
+free A realizada
+free B 
+free B realizada
+Iteraciones: 130141
+Tiempo en segundos: 0.291171
+Resultado: 
+free convergencia
+free convergencia reaalizada
+free A
+free A realizada
+free B 
+free B realizada
+Proceso 2 sali de la funcionProceso 1 sali de la funcionProceso 3 sali de la funcionVector de 1024
+Vector de 1024
+Vector de 1024
+Vector de 1024
+Vector de 2048
+Vector de 2048
+Vector de 2048
+Vector de 2048

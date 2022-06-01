@@ -82,7 +82,7 @@ int main(int argc, char **argv)
 
 int funcionDelMaster(int N, int nrProcesos)
 {
-    DATA_T *A, *B, *swapAux,*original;
+    DATA_T *A, *B, *swapAux,*originalA;
 	int tamBloque = (N * N) / nrProcesos;
 	int converge, i,inj,numIteraciones = 0;
 	int convergeG = 0;
@@ -90,8 +90,8 @@ int funcionDelMaster(int N, int nrProcesos)
 
     // Aloca memoria para los vectores
 	A = (DATA_T *) malloc(sizeof(DATA_T) * N * N);
-    original=A;
 	B = (DATA_T *) malloc(sizeof(DATA_T) * (tamBloque + N) );
+    originalA=A;
 
     // Inicializacion de la matriz
 	int j,f;
@@ -101,21 +101,22 @@ int funcionDelMaster(int N, int nrProcesos)
             A[f+j] = randFP(0.0,1.0);
         }
 	}
-    
-    timetick = dwalltime();
-    // Enviar los bloques a cada proceso
-    MPI_Scatter(A, tamBloque, MPI_DATA_T, A, tamBloque, MPI_DATA_T, ROOT_P, MPI_COMM_WORLD);
 
     #ifdef DEBUG
     printf("Matriz inicial: \n");
     printMatriz(N,N,A);
     #endif
 
+    timetick = dwalltime();
+
+    // Enviar los bloques a cada proceso
+    MPI_Scatter(A, tamBloque, MPI_DATA_T, A, tamBloque, MPI_DATA_T, ROOT_P, MPI_COMM_WORLD);
     while(!convergeG && numIteraciones<10){
         B[0] = (A[0] + A[1] + A[N] + A[N+1]) * 0.25; //Esquina izquierda superior B[0,0]
         
         //Envio el dato para chequear convergencia
    	    MPI_Bcast(B, 1, MPI_DATA_T, ROOT_P, MPI_COMM_WORLD);
+
         MPI_Request request;
 	    MPI_Status status;
 
@@ -124,7 +125,6 @@ int funcionDelMaster(int N, int nrProcesos)
         //Recibo el valor del vecino derecho
         MPI_Irecv(&A[tamBloque], N, MPI_DATA_T, 1, 1, MPI_COMM_WORLD, &request);
         MPI_Wait(&request, &status);
-        
 
         //procesamiento
         converge = procesamientoMaster(A,B,N,N/nrProcesos);
@@ -148,9 +148,9 @@ int funcionDelMaster(int N, int nrProcesos)
     printf("Final: %d. Matriz: \n",numIteraciones);
     printMatriz(N,N,A);
     #endif
-    MPI_Gather(A+1,tamBloque,MPI_DATA_T,original,tamBloque,MPI_DATA_T,ROOT_P,MPI_COMM_WORLD);
+    MPI_Gather(A+1,tamBloque,MPI_DATA_T,originalA,tamBloque,MPI_DATA_T,ROOT_P,MPI_COMM_WORLD);
     printf("Tiempo en segundos %f\n", dwalltime() - timetick);
-    free(A);
+    free(originalA);
     free(B);
     return 0;
 }
@@ -211,6 +211,7 @@ int funcionSlave(int tid, int N, int nrProcesos) {
 
         // Chequeo convergencia global
   	    MPI_Allreduce(&converge, &convergeG, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
+
 
         if(!convergeG){
             //swap

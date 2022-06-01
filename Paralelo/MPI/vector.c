@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 
+#define MAX_ITERACIONES 1000000
 #define ROOT_PID 0
 #define USE_FLOAT
 #ifndef USE_FLOAT
@@ -53,7 +54,6 @@ int main(int argc, char** argv) {
     funcionDelMaster(N, nrProcesos);
   } else {
     funcionSlave(miID, N, nrProcesos);
-    printf("Proceso %d sali de la funcion",miID);
   }
 
   MPI_Finalize();  // Finaliza el ambiente MPI. No debe haber sentencias después
@@ -99,7 +99,7 @@ void funcionDelMaster(int N, int nrProcesos) {
   printVector(N,A);
   #endif
 
-  while (!convergeG) {
+  while (!convergeG && numIteraciones<MAX_ITERACIONES) {
     B[0] = (A[0] + A[1]) * 0.5;
     //Envio el dato B[0] para chequear convergencia
     //Broadcast(FROM,SIZE,TYPE,ROOT,COMM)
@@ -130,33 +130,24 @@ void funcionDelMaster(int N, int nrProcesos) {
     // Chequeo convergencia global
     MPI_Allreduce(&converge, &convergeG, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
 
-    if (!convergeG) {
-      swapAux = A;
-      A = B;
-      B = swapAux;
-      numIteraciones++;
-    }
+    swapAux = A;
+    A = B;
+    B = swapAux;
+    numIteraciones++;
+
+
+    
   }
-
-
-  #ifdef DEBUG
-  printf("Proceso: %d - Envia: B+1=%p - val0: %.5f - A=%p - tamBloque=%d\n",0,B+1,B[1],A,tamBloque);
-  #endif
 
   //Si convergeG=1 no hice swap
   printf("Iteraciones: %d\n", numIteraciones);
-  MPI_Gather(A,tamBloque,MPI_DATA_T,originalA,tamBloque,MPI_DATA_T,ROOT_PID,MPI_COMM_WORLD);
+  MPI_Gather(B,tamBloque,MPI_DATA_T,originalA,tamBloque,MPI_DATA_T,ROOT_PID,MPI_COMM_WORLD);
   printf("Tiempo en segundos: %f\n", dwalltime() - timetick);
   
-  printf("Resultado: \n");
   
   #ifdef DEBUG
+  printf("Resultado: \n");
   printVector(N,originalA);
-  #endif
-
-  #ifdef DEBUG
-  printf("P: %d hace Free de %p y %p\nPunteros: A=%p,B=%p,swapaux=%p,tamBloque=%p,originalA=%p,originalB=%p,",0,A,B,A,B,swapAux,&tamBloque,originalA,originalB);
-  printf("P: %d hace Free de %p y %p\n",0,A,B);
   #endif
 
   free(originalA);
@@ -184,7 +175,7 @@ void funcionSlave(int tid, int N, int nrProcesos) {
   MPI_Scatter(NULL, 0, MPI_DATA_T,         //Pointer to data, length, type
               &A[1], tamBloque, MPI_DATA_T, //Pointer to data received, length, type
               ROOT_PID, MPI_COMM_WORLD);
-  while (!convergencias[1]) {
+  while (!convergencias[1] && numIteraciones<MAX_ITERACIONES) {
     // Recibo B[0] en data0
     MPI_Bcast(&data0, 1, MPI_DATA_T, 0, MPI_COMM_WORLD);
 
@@ -238,38 +229,17 @@ void funcionSlave(int tid, int N, int nrProcesos) {
     // Chequeo de convergencia global
     MPI_Allreduce(&convergencias[0], &convergencias[1], 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
 
-    #ifdef DEBUG
-    printf("iteracion: %d convergenciaLocal: %d, convergenciaGlobal: %d\n",numIteraciones, convergencias[0],convergencias[1]);
-    #endif
-
-    if (!convergencias[1]) {
-      numIteraciones++;
-      swapAux = A;
-      A = B;
-      B = swapAux;
-    }
+    numIteraciones++;
+    swapAux = A;
+    A = B;
+    B = swapAux;
   }
-  #ifdef DEBUG
-  printf("Proceso: %d - Envia: B+1=%p - val0: %.5f - A=%p - tamBloque=%d\n",tid,B+1,B[1],A,tamBloque);
-  #endif
+  //Envio datos finales (quedan en B post swap)
+  MPI_Gather(B+1,tamBloque,MPI_DATA_T,NULL,0,MPI_DATA_T,ROOT_PID,MPI_COMM_WORLD);
 
-  //Si convergencias[1]=1, no hice el swap, envio datos finales
-  MPI_Gather(A+1,tamBloque,MPI_DATA_T,NULL,0,MPI_DATA_T,ROOT_PID,MPI_COMM_WORLD);
-
-  #ifdef DEBUG
-  printf("P: %d hace Free de %p y %p\nPunteros: A=%p,B=%p,swapaux=%p,tamBloque=%p,data0=%p,converge=%p,",tid,A,B,A,B,swapAux,&tamBloque,&data0,&convergencias[0]);
-  printVector(tamBloque,B+1);
-  #endif
-
-  printf("free convergencia\n");
   free(convergencias);
-  printf("free convergencia reaalizada\n");
-  printf("free A\n");
   free(A);
-  printf("free A realizada\n");
-  printf("free B \n");
   free(B);
-  printf("free B realizada\n");
 }
 
 DATA_T randFP(DATA_T min, DATA_T max) {

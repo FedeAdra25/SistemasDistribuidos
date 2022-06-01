@@ -80,11 +80,11 @@ int main(int argc, char** argv) {
 				B = swapAux;
 		}
 		#ifdef DEBUG
-		if(numIteracion%10000==0 || numIteracion>930000){
+		if(numIteracion<20 || numIteracion%1000==0 || numIteracion>377470){
 			//Imprimo  calculo
 			printf("Iteracion: %d\n",numIteracion);
 			printVector(N,A);				
-			printf("-------------------------------------------------\n");
+			printf("\n");
 		}
 		#endif
 		

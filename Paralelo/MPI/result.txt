@@ -1,0 +1,13 @@
+Tiempo en segundos 22.781047 - Iteraciones: 3639
+Tiempo en segundos 12.134343 - Iteraciones: 3639
+Tiempo en segundos 119.652987 - Iteraciones: 4785
+Tiempo en segundos 63.057561 - Iteraciones: 4785
+
+Iteraciones: 1000
+Tiempo en segundos: 0.002143
+Iteraciones: 130142
+Tiempo en segundos: 0.291486
+Iteraciones: 130142
+Tiempo en segundos: 0.265242
+Iteraciones: 1000000
+Tiempo en segundos: 3.405804

@@ -107,7 +107,7 @@ int funcionDelMaster(int N, int nrProcesos)
 
     // Enviar los bloques a cada proceso
     MPI_Scatter(A, tamBloque, MPI_DATA_T, A, tamBloque, MPI_DATA_T, ROOT_P, MPI_COMM_WORLD);
-    while(!convergeG && numIteraciones<100){
+    while(!convergeG && numIteraciones<200){
         B[0] = (A[0] + A[1] + A[N] + A[N+1]) * 0.25; //Esquina izquierda superior B[0,0]
         
         //Envio el dato para chequear convergencia
@@ -145,7 +145,7 @@ int funcionDelMaster(int N, int nrProcesos)
     printMatriz(N,N,A);
     #endif
     MPI_Gather(A+1,tamBloque,MPI_DATA_T,originalA,tamBloque,MPI_DATA_T,ROOT_P,MPI_COMM_WORLD);
-    printf("Tiempo en segundos %f\n", dwalltime() - timetick);
+    printf("Tiempo en segundos %f - Iteraciones: %d\n", dwalltime() - timetick,numIteraciones);
     free(originalA);
     free(B);
     return 0;
@@ -173,7 +173,7 @@ int funcionSlave(int tid, int N, int nrProcesos) {
     #endif
 
 
-    while (!convergencias[1] && numIteraciones<100) {
+    while (!convergencias[1] && numIteraciones<200) {
         // Recibo B[0] en data0
         MPI_Bcast(&data0, 1, MPI_DATA_T, 0, MPI_COMM_WORLD);
 
@@ -190,7 +190,7 @@ int funcionSlave(int tid, int N, int nrProcesos) {
 			MPI_Irecv(A, N, MPI_DATA_T, tid-1, 1, MPI_COMM_WORLD, &request);
 			MPI_Wait(&request, &status);
 			// recibo el valor del vecino derecho
-			MPI_Irecv(&A[cantFilas+N], N, MPI_DATA_T, tid+1, 1, MPI_COMM_WORLD, &request);
+			MPI_Irecv(&A[cantFilas*N+N], N, MPI_DATA_T, tid+1, 1, MPI_COMM_WORLD, &request);
 			MPI_Wait(&request, &status);
         }else{
             
@@ -201,6 +201,12 @@ int funcionSlave(int tid, int N, int nrProcesos) {
 			MPI_Wait(&request, &status);
         }
 
+        #ifdef DEBUG
+        if(numIteraciones==0){
+            printf("Matriz inicial: \n");
+            printMatriz(N/nrProcesos+2-(tid==(nrProcesos-1)),N,A);
+        }
+        #endif
         
         //Calculo el Promedio y convergencia
         convergencias[0] = procesamientoSlave(A, B, N, cantFilas - (tid==(nrProcesos-1)) , tid,data0,nrProcesos);
@@ -218,7 +224,7 @@ int funcionSlave(int tid, int N, int nrProcesos) {
         }
         #ifdef DEBUG
         printf("MATRIZ A ITERACION: %d\n",numIteraciones);
-        printMatriz(N/nrProcesos+2-(tid==(nrProcesos-1)),N,A);
+        printMatriz(N/nrProcesos,N,A+N);
         #endif
     }
     MPI_Gather(A+1,cantFilas*N,MPI_DATA_T,NULL,cantFilas*N,MPI_DATA_T,ROOT_P,MPI_COMM_WORLD);
@@ -322,10 +328,10 @@ int procesamientoSlave(DATA_T *A, DATA_T *B, int N, int filasCalculo, int tid,in
     int i,j,inj,converge;
 
     converge =1;
-    for(i= 1;converge && i<filasCalculo+1;i++) {
+    for(i=1;converge && i<filasCalculo+1;i++) {
         //Calculo primer elemento de la fila (calculo de todas las primeras columnas)
         //B[i,0] = ...
-        B[i*N]=(  A[(i-1)*N] + A[(i-1)*N+1]     //2 elems de fila anterior
+        B[i*N]=( A[(i-1)*N] + A[(i-1)*N+1]     //2 elems de fila anterior
             + A[i*N] + A[i*N+1]             //2 elems de fila actual
             + A[(i+1)*N] + A[(i+1)*N+1]     //2 elems de fila siguiente
             ) * (1.0/6);                    //Divido por 6
